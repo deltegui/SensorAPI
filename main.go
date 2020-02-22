@@ -18,6 +18,6 @@ func setVariables() {
 func main() {
 	setVariables()
 	config := configuration.Load()
-	controllers.Register()
+	controllers.Register(config)
 	locomotive.Run(config.ListenURL)
 }

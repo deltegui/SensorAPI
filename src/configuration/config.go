@@ -4,7 +4,9 @@ import "github.com/deltegui/configloader"
 
 //Configuration representation of json config file
 type Configuration struct {
-	ListenURL string `paramName:"url"`
+	ListenURL      string `paramName:"url"`
+	DatabaseDriver string `paramName:"dbdriver"`
+	Database       string `paramName:"dbname"`
 }
 
 //Load configuration from config.json file and overwrite
