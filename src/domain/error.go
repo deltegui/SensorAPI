@@ -15,5 +15,10 @@ func (caseErr UseCaseError) Error() string {
 
 var (
 	MalformedRequestErr = UseCaseError{Code: 000, Reason: "Bad request", Fix: "See documentation and try again"}
-	InternalError       = UseCaseError{Code: 001, Reason: "Internal Error", Fix: ""}
+	InternalErr         = UseCaseError{Code: 001, Reason: "Internal Error", Fix: ""}
+	UpdateErr           = UseCaseError{Code: 002, Reason: "Error while updating your data", Fix: "Ensure you data is ok"}
+)
+
+var (
+	SensorNotFoundErr = UseCaseError{Code: 100, Reason: "Sensor not found", Fix: "Create your sensor"}
 )

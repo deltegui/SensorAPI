@@ -17,7 +17,7 @@ func NewSqlxConnection(config configuration.Configuration) SqlxConnection {
 	return SqlxConnection{config: config}
 }
 
-func (sqlxConn SqlxConnection) GetConnection() *sqlx.DB {
+func (sqlxConn *SqlxConnection) GetConnection() *sqlx.DB {
 	if sqlxConn.db == nil {
 		sqlxConn.connect()
 		sqlxConn.checkConnection()
