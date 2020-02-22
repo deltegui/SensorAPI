@@ -23,8 +23,8 @@ func main() {
 	config := configuration.Load()
 	controllers.Register(config)
 	injector.ShowAvailableBuilders()
-	scheluderType := reflect.TypeOf((*domain.ReportScheluder)(nil)).Elem()
-	scheluder := injector.GetByType(scheluderType).(domain.ReportScheluder)
-	go scheluder.Run()
+	reporterType := reflect.TypeOf((*domain.Reporter)(nil)).Elem()
+	reporter := injector.GetByType(reporterType).(domain.Reporter)
+	go reporter.Start()
 	locomotive.Run(config.ListenURL)
 }

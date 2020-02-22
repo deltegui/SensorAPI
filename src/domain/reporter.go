@@ -1,7 +1,10 @@
 package domain
 
+import "log"
+
 func newScheluderJob(sensor Sensor, reportRepo ReportRepo) ScheluderJob {
 	return func() {
+		log.Println("Running job for %s", sensor.Name)
 		currentReports := sensor.GetCurrentState()
 		for _, report := range currentReports {
 			reportRepo.Save(report)

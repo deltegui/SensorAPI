@@ -2,6 +2,7 @@ package cronscheluder
 
 import (
 	"fmt"
+	"log"
 	"sensorapi/src/domain"
 
 	"github.com/robfig/cron"
@@ -17,15 +18,15 @@ func NewCronScheluder() domain.ReportScheluder {
 
 func parseInterval(interval int64) string {
 	if interval == 0 {
-		return "*"
+		return "0"
 	}
 	return fmt.Sprintf("*/%d", interval)
 }
 
 func (scheluder CronScheluder) AddJobEvery(job domain.ScheluderJob, interval int64) {
 	minutes := parseInterval(interval % 60)
-	hours := parseInterval((interval / 60) % 24)
-	cronExpr := fmt.Sprintf("%s %s * * *", minutes, hours)
+	cronExpr := fmt.Sprintf("%s * * * *", minutes)
+	log.Printf("One job have %d inerval, traduced to cron expression: %s\n", interval, cronExpr)
 	scheluder.cron.AddFunc(cronExpr, job)
 }
 
