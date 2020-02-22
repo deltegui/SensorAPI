@@ -62,3 +62,15 @@ type Report struct {
 type SensorConnector interface {
 	ReadDataFor(Sensor) []Report
 }
+
+type ReportRepo interface {
+	Save(Report)
+	GetAll() []Report
+}
+
+type ScheluderJob func()
+
+type ReportScheluder interface {
+	AddJobEvery(ScheluderJob, int64)
+	Run()
+}

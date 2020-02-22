@@ -10,4 +10,5 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/jinzhu/gorm v1.9.12 // indirect
 	github.com/jmoiron/sqlx v1.2.0
+	github.com/robfig/cron v1.2.0
 )

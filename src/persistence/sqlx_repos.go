@@ -54,7 +54,7 @@ func (repo SqlxSensorRepo) Save(sensor domain.Sensor) error {
 	insertSensor := "insert into SENSORS (NAME, CONNTYPE, CONNVALUE, UPDATE_INTERVAL)values(?, ?, ? ,?)"
 	tx, err := repo.db.Beginx()
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 	defer tx.Commit()
 	if _, err = tx.Exec(insertSensor, sensor.Name, sensor.ConnType, sensor.ConnValue, sensor.UpdateInterval); err != nil {
@@ -79,7 +79,7 @@ func (repo SqlxSensorRepo) saveSupportedReportsForSensor(tx *sqlx.Tx, sensor dom
 func (repo SqlxSensorRepo) GetAll() []domain.Sensor {
 	tx, err := repo.db.Beginx()
 	if err != nil {
-		return []domain.Sensor{}
+		log.Fatal(err)
 	}
 	defer tx.Commit()
 	var sensors []domain.Sensor
@@ -108,7 +108,7 @@ func (repo SqlxSensorRepo) FillSupportedReportsForSensor(tx *sqlx.Tx, sensor *do
 func (repo SqlxSensorRepo) GetByName(name string) (domain.Sensor, error) {
 	tx, err := repo.db.Beginx()
 	if err != nil {
-		return domain.Sensor{}, err
+		log.Fatal(err)
 	}
 	defer tx.Commit()
 	var sensor []domain.Sensor
@@ -126,17 +126,49 @@ func (repo SqlxSensorRepo) Update(sensor domain.Sensor) bool {
 	update := "UPDATE SENSORS SET CONNTYPE = ?, CONNVALUE = ?, UPDATE_INTERVAL = ?, DELETED = ? WHERE NAME LIKE ?"
 	tx, err := repo.db.Beginx()
 	if err != nil {
-		log.Println(err)
-		return false
+		log.Fatal(err)
 	}
 	defer tx.Commit()
 	if _, err = tx.Exec(update, sensor.ConnType, sensor.ConnValue, sensor.UpdateInterval, sensor.Deleted, sensor.Name); err != nil {
-		log.Println(err)
-		return false
+		log.Fatal(err)
 	}
 	if err = repo.saveSupportedReportsForSensor(tx, sensor); err != nil {
-		log.Println(err)
-		return false
+		log.Fatal(err)
 	}
 	return true
+}
+
+type SqlxReportRepo struct {
+	db *sqlx.DB
+}
+
+func NewSqlxReportRepo(conn *SqlxConnection) domain.ReportRepo {
+	return SqlxReportRepo{conn.GetConnection()}
+}
+
+func (repo SqlxReportRepo) Save(report domain.Report) {
+	insert := "INSERT INTO REPORTS (SENSOR, TYPE, VALUE, REPORT_DATE) VALUES(?, ?, ?, ?)"
+	tx, err := repo.db.Beginx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer tx.Commit()
+	_, err = tx.Exec(insert, report.SensorName, report.ReportType, report.Value, report.Date.UTC())
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (repo SqlxReportRepo) GetAll() []domain.Report {
+	tx, err := repo.db.Beginx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer tx.Commit()
+	var types []domain.Report
+	err = tx.Select(&types, "SELECT SENSOR, TYPE, VALUE, REPORT_DATE FROM REPORTS")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return types
 }
