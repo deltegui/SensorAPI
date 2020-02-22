@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"log"
+	"sensorapi/src/connectors"
 	"sensorapi/src/domain"
 
 	"github.com/jmoiron/sqlx"
@@ -89,6 +90,7 @@ func (repo SqlxSensorRepo) GetAll() []domain.Sensor {
 	}
 	for i := 0; i < len(sensors); i++ {
 		repo.FillSupportedReportsForSensor(tx, &sensors[i])
+		sensors[i].Connector = connectors.HTTPConnector{IP: sensors[i].ConnValue}
 	}
 	return sensors
 }
@@ -103,20 +105,21 @@ func (repo SqlxSensorRepo) FillSupportedReportsForSensor(tx *sqlx.Tx, sensor *do
 	sensor.SupportedReports = reports
 }
 
-func (repo SqlxSensorRepo) GetByName(name string) *domain.Sensor {
+func (repo SqlxSensorRepo) GetByName(name string) (domain.Sensor, error) {
 	tx, err := repo.db.Beginx()
 	if err != nil {
-		return nil
+		return domain.Sensor{}, err
 	}
 	defer tx.Commit()
 	var sensor []domain.Sensor
 	err = tx.Select(&sensor, "SELECT NAME as Name, CONNTYPE as ConnType, CONNVALUE as ConnValue, UPDATE_INTERVAL as UpdateInterval, DELETED as Deleted FROM SENSORS WHERE NAME LIKE ?", name)
 	if err != nil || len(sensor) < 1 {
 		log.Println(err)
-		return nil
+		return domain.Sensor{}, err
 	}
 	repo.FillSupportedReportsForSensor(tx, &sensor[0])
-	return &sensor[0]
+	sensor[0].Connector = connectors.HTTPConnector{IP: sensor[0].ConnValue}
+	return sensor[0], nil
 }
 
 func (repo SqlxSensorRepo) Update(sensor domain.Sensor) bool {

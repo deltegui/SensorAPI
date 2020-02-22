@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 type Presenter interface {
 	Present(data interface{})
 	PresentError(data error)
@@ -33,11 +35,30 @@ type Sensor struct {
 	UpdateInterval   int64          `db:"UpdateInterval"`
 	Deleted          bool           `db:"Deleted"`
 	SupportedReports []ReportType
+	Connector        SensorConnector `json:"-"`
+}
+
+func (sensor Sensor) GetCurrentState() []Report {
+	return sensor.Connector.ReadDataFor(sensor)
 }
 
 type SensorRepo interface {
 	Save(Sensor) error
 	GetAll() []Sensor
-	GetByName(name string) *Sensor
+	GetByName(name string) (Sensor, error)
 	Update(sensor Sensor) bool
+}
+
+// Report represents a Sensor report.
+type Report struct {
+	ReportType string
+	SensorName string
+	Date       time.Time
+	Value      float32
+}
+
+// SensorConnector is an abstraction over
+// the way to communicate to real sensor
+type SensorConnector interface {
+	ReadDataFor(Sensor) []Report
 }

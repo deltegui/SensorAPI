@@ -42,8 +42,8 @@ func (controller SensorController) SaveSensor(w http.ResponseWriter, req *http.R
 func (controller SensorController) GetSensorByName(w http.ResponseWriter, req *http.Request) {
 	presenter := locomotive.JSONPresenter{w}
 	sensorName := mux.Vars(req)["name"]
-	sensor := controller.sensorRepo.GetByName(sensorName)
-	if sensor == nil {
+	sensor, err := controller.sensorRepo.GetByName(sensorName)
+	if err != nil {
 		presenter.PresentError(domain.SensorNotFoundErr)
 		return
 	}
@@ -53,13 +53,13 @@ func (controller SensorController) GetSensorByName(w http.ResponseWriter, req *h
 func (controller SensorController) DeleteSensorByName(w http.ResponseWriter, req *http.Request) {
 	presenter := locomotive.JSONPresenter{w}
 	sensorName := mux.Vars(req)["name"]
-	sensor := controller.sensorRepo.GetByName(sensorName)
-	if sensor == nil {
+	sensor, err := controller.sensorRepo.GetByName(sensorName)
+	if err != nil {
 		presenter.PresentError(domain.SensorNotFoundErr)
 		return
 	}
 	sensor.Deleted = true
-	if controller.sensorRepo.Update(*sensor) {
+	if controller.sensorRepo.Update(sensor) {
 		presenter.Present(struct{ Deleted bool }{true})
 		return
 	}
@@ -80,6 +80,17 @@ func (controller SensorController) UpdateSensor(w http.ResponseWriter, req *http
 	presenter.Present(sensor)
 }
 
+func (controller SensorController) SensorNow(w http.ResponseWriter, req *http.Request) {
+	presenter := locomotive.JSONPresenter{w}
+	sensorName := mux.Vars(req)["name"]
+	sensor, err := controller.sensorRepo.GetByName(sensorName)
+	if err != nil {
+		presenter.PresentError(domain.SensorNotFoundErr)
+		return
+	}
+	presenter.Present(sensor.GetCurrentState())
+}
+
 func (controller SensorController) GetMappings() []locomotive.Mapping {
 	return []locomotive.Mapping{
 		{Method: locomotive.Get, Handler: controller.GetAllSensors, Endpoint: "/all"},
@@ -87,5 +98,6 @@ func (controller SensorController) GetMappings() []locomotive.Mapping {
 		{Method: locomotive.Get, Handler: controller.GetSensorByName, Endpoint: "/{name}"},
 		{Method: locomotive.Delete, Handler: controller.DeleteSensorByName, Endpoint: "/{name}"},
 		{Method: locomotive.Post, Handler: controller.UpdateSensor, Endpoint: "/update"},
+		{Method: locomotive.Get, Handler: controller.SensorNow, Endpoint: "/{name}/now"},
 	}
 }
