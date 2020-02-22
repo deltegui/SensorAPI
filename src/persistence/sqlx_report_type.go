@@ -16,13 +16,13 @@ func NewSqlxReportTypeRepo(conn SqlxConnection) domain.ReportTypeRepo {
 }
 
 func (repo SqlxReportTypeRepo) Save(rType domain.ReportType) error {
-	insert := "insert into REPORT_TYPES values($1)"
+	insert := "insert into REPORT_TYPES values(?)"
 	tx, err := repo.db.Beginx()
 	if err != nil {
 		return err
 	}
 	defer tx.Commit()
-	_, err = tx.Exec(insert, string(rType))
+	_, err = tx.Exec(insert, rType)
 	return err
 }
 
