@@ -25,7 +25,7 @@ func parseInterval(interval int64) string {
 
 func (scheluder CronScheluder) AddJobEvery(job domain.ScheluderJob, interval int64) {
 	minutes := parseInterval(interval % 60)
-	cronExpr := fmt.Sprintf("%s * * * *", minutes)
+	cronExpr := fmt.Sprintf("0 %s * * * *", minutes)
 	log.Printf("One job have %d inerval, traduced to cron expression: %s\n", interval, cronExpr)
 	scheluder.cron.AddFunc(cronExpr, job)
 }
