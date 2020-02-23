@@ -33,13 +33,13 @@ const (
 )
 
 type Sensor struct {
-	Name             string          `db:"NAME" validate:"required"`
-	ConnType         ConnectionType  `db:"CONNTYPE" validate:"required"`
-	ConnValue        string          `db:"CONNVALUE" validate:"required"`
-	UpdateInterval   int64           `db:"UPDATE_INTERVAL" validate:"required"`
-	Deleted          bool            `db:"DELETED"`
-	SupportedReports []ReportType    `validate:"required"`
-	Connector        SensorConnector `json:"-"`
+	Name             string         `db:"NAME"`
+	ConnType         ConnectionType `db:"CONNTYPE"`
+	ConnValue        string         `db:"CONNVALUE"`
+	UpdateInterval   int64          `db:"UPDATE_INTERVAL"`
+	Deleted          bool           `db:"DELETED"`
+	SupportedReports []ReportType
+	Connector        SensorConnector
 }
 
 func (sensor Sensor) GetCurrentState() ([]Report, error) {
@@ -66,10 +66,10 @@ type SensorRepo interface {
 
 // Report represents a Sensor report.
 type Report struct {
-	ReportType string    `db:"TYPE"`
-	SensorName string    `db:"SENSOR"`
-	Date       time.Time `db:"REPORT_DATE"`
-	Value      float32   `db:"VALUE"`
+	ReportType string    `db:"TYPE" json:"type"`
+	SensorName string    `db:"SENSOR" json:"sensor"`
+	Date       time.Time `db:"REPORT_DATE" json:"date"`
+	Value      float32   `db:"VALUE" json:"value"`
 }
 
 // SensorConnector is an abstraction over

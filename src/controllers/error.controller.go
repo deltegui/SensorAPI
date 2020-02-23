@@ -1,8 +1,9 @@
 package controllers
 
 import (
-	"github.com/deltegui/locomotive"
 	"net/http"
+
+	"github.com/deltegui/locomotive"
 )
 
 type ErrorController struct{}
@@ -13,7 +14,9 @@ func NewErrorController() ErrorController {
 
 func (ErrorController ErrorController) NotFound(w http.ResponseWriter, req *http.Request) {
 	presenter := locomotive.JSONPresenter{w}
-	presenter.Present(struct{Code string}{Code: "404"})
+	presenter.Present(struct {
+		Code string `json:"code"`
+	}{Code: "404"})
 }
 
 func (ErrorController ErrorController) GetMappings() []locomotive.Mapping {
