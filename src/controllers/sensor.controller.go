@@ -14,10 +14,11 @@ import (
 type SensorController struct {
 	sensorRepo domain.SensorRepo
 	reporter   domain.Reporter
+	validator  domain.Validator
 }
 
-func NewSensorController(sensorRepo domain.SensorRepo, reporter domain.Reporter) SensorController {
-	return SensorController{sensorRepo, reporter}
+func NewSensorController(validator domain.Validator, sensorRepo domain.SensorRepo, reporter domain.Reporter) SensorController {
+	return SensorController{sensorRepo, reporter, validator}
 }
 
 func (controller SensorController) GetAllSensors(w http.ResponseWriter, req *http.Request) {
@@ -34,6 +35,10 @@ func (controller SensorController) SaveSensor(w http.ResponseWriter, req *http.R
 	presenter := locomotive.JSONPresenter{w}
 	var sensor domain.Sensor
 	if err := json.NewDecoder(req.Body).Decode(&sensor); err != nil {
+		presenter.PresentError(domain.MalformedRequestErr)
+		return
+	}
+	if err := controller.validator.Validate(sensor); err != nil {
 		presenter.PresentError(domain.MalformedRequestErr)
 		return
 	}
@@ -78,6 +83,11 @@ func (controller SensorController) UpdateSensor(w http.ResponseWriter, req *http
 	presenter := locomotive.JSONPresenter{w}
 	var sensor domain.Sensor
 	if err := json.NewDecoder(req.Body).Decode(&sensor); err != nil {
+		presenter.PresentError(domain.MalformedRequestErr)
+		return
+	}
+	if err := controller.validator.Validate(sensor); err != nil {
+		log.Println(err)
 		presenter.PresentError(domain.MalformedRequestErr)
 		return
 	}

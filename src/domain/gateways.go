@@ -15,6 +15,10 @@ type UseCase interface {
 	Exec(Presenter, UseCaseRequest)
 }
 
+type Validator interface {
+	Validate(interface{}) error
+}
+
 type ReportType string
 
 type ReportTypeRepo interface {
@@ -29,12 +33,12 @@ const (
 )
 
 type Sensor struct {
-	Name             string         `db:"NAME"`
-	ConnType         ConnectionType `db:"CONNTYPE"`
-	ConnValue        string         `db:"CONNVALUE"`
-	UpdateInterval   int64          `db:"UPDATE_INTERVAL"`
-	Deleted          bool           `db:"DELETED"`
-	SupportedReports []ReportType
+	Name             string          `db:"NAME" validate:"required"`
+	ConnType         ConnectionType  `db:"CONNTYPE" validate:"required"`
+	ConnValue        string          `db:"CONNVALUE" validate:"required"`
+	UpdateInterval   int64           `db:"UPDATE_INTERVAL" validate:"required"`
+	Deleted          bool            `db:"DELETED"`
+	SupportedReports []ReportType    `validate:"required"`
 	Connector        SensorConnector `json:"-"`
 }
 

@@ -5,6 +5,7 @@ import (
 	"sensorapi/src/cronscheluder"
 	"sensorapi/src/domain"
 	"sensorapi/src/persistence"
+	"sensorapi/src/validator"
 
 	"github.com/deltegui/locomotive"
 	"github.com/deltegui/locomotive/injector"
@@ -13,6 +14,7 @@ import (
 func Register(config configuration.Configuration) {
 	conn := persistence.NewSqlxConnection(config)
 	injector.Add(func() *persistence.SqlxConnection { return &conn })
+	injector.Add(validator.NewPlaygroundValidator)
 	injector.Add(persistence.NewSqlxReportTypeRepo)
 	injector.Add(persistence.NewSqlxSensorRepo)
 	injector.Add(persistence.NewSqlxReportRepo)
