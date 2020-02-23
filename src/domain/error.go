@@ -20,5 +20,6 @@ var (
 )
 
 var (
-	SensorNotFoundErr = UseCaseError{Code: 100, Reason: "Sensor not found", Fix: "Create your sensor"}
+	SensorNotFoundErr   = UseCaseError{Code: 100, Reason: "Sensor not found", Fix: "Create your sensor"}
+	SensorNotRespondErr = UseCaseError{Code: 101, Reason: "Sensor does not respond", Fix: "Check the sensor"}
 )

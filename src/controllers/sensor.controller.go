@@ -13,15 +13,21 @@ import (
 
 type SensorController struct {
 	sensorRepo domain.SensorRepo
+	reporter   domain.Reporter
 }
 
-func NewSensorController(sensorRepo domain.SensorRepo) SensorController {
-	return SensorController{sensorRepo}
+func NewSensorController(sensorRepo domain.SensorRepo, reporter domain.Reporter) SensorController {
+	return SensorController{sensorRepo, reporter}
 }
 
 func (controller SensorController) GetAllSensors(w http.ResponseWriter, req *http.Request) {
 	presenter := locomotive.JSONPresenter{w}
-	presenter.Present(controller.sensorRepo.GetAll())
+	wantDeleted := req.URL.Query()["deleted"]
+	if len(wantDeleted) < 1 || len(wantDeleted[0]) == 0 || wantDeleted[0] == "false" {
+		presenter.Present(controller.sensorRepo.GetAll(domain.WithoutDeletedSensors))
+		return
+	}
+	presenter.Present(controller.sensorRepo.GetAll(domain.WithDeletedSensors))
 }
 
 func (controller SensorController) SaveSensor(w http.ResponseWriter, req *http.Request) {
@@ -37,6 +43,7 @@ func (controller SensorController) SaveSensor(w http.ResponseWriter, req *http.R
 		return
 	}
 	presenter.Present(sensor)
+	controller.reporter.Restart()
 }
 
 func (controller SensorController) GetSensorByName(w http.ResponseWriter, req *http.Request) {
@@ -64,6 +71,7 @@ func (controller SensorController) DeleteSensorByName(w http.ResponseWriter, req
 		return
 	}
 	presenter.PresentError(domain.InternalErr)
+	controller.reporter.Restart()
 }
 
 func (controller SensorController) UpdateSensor(w http.ResponseWriter, req *http.Request) {
@@ -78,6 +86,7 @@ func (controller SensorController) UpdateSensor(w http.ResponseWriter, req *http
 		return
 	}
 	presenter.Present(sensor)
+	controller.reporter.Restart()
 }
 
 func (controller SensorController) SensorNow(w http.ResponseWriter, req *http.Request) {
@@ -88,12 +97,17 @@ func (controller SensorController) SensorNow(w http.ResponseWriter, req *http.Re
 		presenter.PresentError(domain.SensorNotFoundErr)
 		return
 	}
-	presenter.Present(sensor.GetCurrentState())
+	reports, err := sensor.GetCurrentState()
+	if err != nil {
+		presenter.PresentError(err)
+		return
+	}
+	presenter.Present(reports)
 }
 
 func (controller SensorController) GetMappings() []locomotive.Mapping {
 	return []locomotive.Mapping{
-		{Method: locomotive.Get, Handler: controller.GetAllSensors, Endpoint: "/all"},
+		{Method: locomotive.Get, Handler: controller.GetAllSensors, Endpoint: "/"},
 		{Method: locomotive.Post, Handler: controller.SaveSensor, Endpoint: "/"},
 		{Method: locomotive.Get, Handler: controller.GetSensorByName, Endpoint: "/{name}"},
 		{Method: locomotive.Delete, Handler: controller.DeleteSensorByName, Endpoint: "/{name}"},

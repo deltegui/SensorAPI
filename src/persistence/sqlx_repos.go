@@ -76,16 +76,19 @@ func (repo SqlxSensorRepo) saveSupportedReportsForSensor(tx *sqlx.Tx, sensor dom
 	return nil
 }
 
-func (repo SqlxSensorRepo) GetAll() []domain.Sensor {
+func (repo SqlxSensorRepo) GetAll(showDeleted domain.ShowDeleted) []domain.Sensor {
 	tx, err := repo.db.Beginx()
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer tx.Commit()
 	var sensors []domain.Sensor
-	err = tx.Select(&sensors, "SELECT NAME as Name, CONNTYPE as ConnType, CONNVALUE as ConnValue, UPDATE_INTERVAL as UpdateInterval, DELETED as Deleted FROM SENSORS")
+	err = tx.Select(&sensors, "SELECT NAME, CONNTYPE, CONNVALUE, UPDATE_INTERVAL, DELETED FROM SENSORS WHERE DELETED = ?", showDeleted)
 	if err != nil {
 		log.Println(err)
+		return []domain.Sensor{}
+	}
+	if sensors == nil {
 		return []domain.Sensor{}
 	}
 	for i := 0; i < len(sensors); i++ {
@@ -112,7 +115,7 @@ func (repo SqlxSensorRepo) GetByName(name string) (domain.Sensor, error) {
 	}
 	defer tx.Commit()
 	var sensor []domain.Sensor
-	err = tx.Select(&sensor, "SELECT NAME as Name, CONNTYPE as ConnType, CONNVALUE as ConnValue, UPDATE_INTERVAL as UpdateInterval, DELETED as Deleted FROM SENSORS WHERE NAME LIKE ?", name)
+	err = tx.Select(&sensor, "SELECT NAME, CONNTYPE, CONNVALUE, UPDATE_INTERVAL, DELETED FROM SENSORS WHERE NAME LIKE ?", name)
 	if err != nil || len(sensor) < 1 {
 		log.Println(err)
 		return domain.Sensor{}, err
@@ -165,10 +168,10 @@ func (repo SqlxReportRepo) GetAll() []domain.Report {
 		log.Fatal(err)
 	}
 	defer tx.Commit()
-	var types []domain.Report
-	err = tx.Select(&types, "SELECT SENSOR, TYPE, VALUE, REPORT_DATE FROM REPORTS")
+	var reports []domain.Report
+	err = tx.Select(&reports, "SELECT SENSOR, TYPE, VALUE, REPORT_DATE FROM REPORTS")
 	if err != nil {
 		log.Fatal(err)
 	}
-	return types
+	return reports
 }

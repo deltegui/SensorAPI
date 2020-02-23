@@ -15,7 +15,7 @@ type HTTPConnector struct {
 	IP string
 }
 
-func (connector HTTPConnector) ReadDataFor(sensor domain.Sensor) []domain.Report {
+func (connector HTTPConnector) ReadDataFor(sensor domain.Sensor) ([]domain.Report, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s", connector.IP), nil)
 	if err != nil {
 		log.Fatalf("%v", err)
@@ -26,12 +26,13 @@ func (connector HTTPConnector) ReadDataFor(sensor domain.Sensor) []domain.Report
 	client := http.DefaultClient
 	res, err := client.Do(req)
 	if err != nil {
-		log.Fatalf("%v", err)
+		return []domain.Report{}, err
 	}
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		log.Fatalf("%v", err)
+		log.Println(err)
+		return []domain.Report{}, err
 	}
 	var data map[string]float32
 	json.Unmarshal(body, &data)
@@ -44,5 +45,5 @@ func (connector HTTPConnector) ReadDataFor(sensor domain.Sensor) []domain.Report
 			Value:      value,
 		})
 	}
-	return reports
+	return reports, nil
 }

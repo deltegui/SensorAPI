@@ -10,5 +10,6 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/jinzhu/gorm v1.9.12 // indirect
 	github.com/jmoiron/sqlx v1.2.0
-	github.com/robfig/cron v1.2.0
+	github.com/robfig/cron/v3 v3.0.0
+	golang.org/x/tools v0.0.0-20200221224223-e1da425f72fd // indirect
 )

@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"fmt"
 	"log"
 	"sensorapi/src/configuration"
 
@@ -27,7 +28,7 @@ func (sqlxConn *SqlxConnection) GetConnection() *sqlx.DB {
 
 func (conn *SqlxConnection) connect() {
 	config := conn.config
-	db, err := sqlx.Open(config.DatabaseDriver, config.Database)
+	db, err := sqlx.Open(config.DatabaseDriver, fmt.Sprintf("%s?parseTime=true", config.Database))
 	if err != nil {
 		log.Fatalln("Error creating connection to database: ", err)
 	}

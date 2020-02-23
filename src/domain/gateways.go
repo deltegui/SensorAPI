@@ -29,38 +29,49 @@ const (
 )
 
 type Sensor struct {
-	Name             string         `db:"Name"`
-	ConnType         ConnectionType `db:"ConnType"`
-	ConnValue        string         `db:"ConnValue"`
-	UpdateInterval   int64          `db:"UpdateInterval"`
-	Deleted          bool           `db:"Deleted"`
+	Name             string         `db:"NAME"`
+	ConnType         ConnectionType `db:"CONNTYPE"`
+	ConnValue        string         `db:"CONNVALUE"`
+	UpdateInterval   int64          `db:"UPDATE_INTERVAL"`
+	Deleted          bool           `db:"DELETED"`
 	SupportedReports []ReportType
 	Connector        SensorConnector `json:"-"`
 }
 
-func (sensor Sensor) GetCurrentState() []Report {
-	return sensor.Connector.ReadDataFor(sensor)
+func (sensor Sensor) GetCurrentState() ([]Report, error) {
+	reports, err := sensor.Connector.ReadDataFor(sensor)
+	if err != nil {
+		return reports, SensorNotRespondErr
+	}
+	return reports, nil
 }
+
+type ShowDeleted bool
+
+const (
+	WithDeletedSensors    ShowDeleted = true
+	WithoutDeletedSensors ShowDeleted = false
+)
 
 type SensorRepo interface {
 	Save(Sensor) error
-	GetAll() []Sensor
+	GetAll(showDeleted ShowDeleted) []Sensor
 	GetByName(name string) (Sensor, error)
 	Update(sensor Sensor) bool
 }
 
 // Report represents a Sensor report.
 type Report struct {
-	ReportType string
-	SensorName string
-	Date       time.Time
-	Value      float32
+	ReportType string    `db:"TYPE"`
+	SensorName string    `db:"SENSOR"`
+	Date       time.Time `db:"REPORT_DATE"`
+	Value      float32   `db:"VALUE"`
 }
 
 // SensorConnector is an abstraction over
 // the way to communicate to real sensor
 type SensorConnector interface {
-	ReadDataFor(Sensor) []Report
+	ReadDataFor(Sensor) ([]Report, error)
 }
 
 type ReportRepo interface {
@@ -72,5 +83,6 @@ type ScheluderJob func()
 
 type ReportScheluder interface {
 	AddJobEvery(ScheluderJob, int64)
-	Run()
+	Start() // DEBE SER NO BLOQUEANTE (QUE ARRANQUE UNA CORRUTINA)
+	Stop()
 }
