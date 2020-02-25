@@ -1,5 +1,5 @@
 {
     "ListenURL": "localhost:8080",
     "DatabaseDriver": "mysql",
-    "Database": "root:root@tcp(127.0.0.1:3306)/TEMPANALIZRV20"
+    "Database": "root:root@tcp(db:3306)/tempanalizr"
 }

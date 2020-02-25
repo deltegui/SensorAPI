@@ -1,0 +1,20 @@
+version: '3'
+services:
+    api:
+        build: .
+        ports:
+            - 8080:8080
+        restart: always
+        links:
+            - db
+        depends_on:
+            - db
+    db:
+        image: mysql:8.0.19
+        restart: always
+        environment:
+            - MYSQL_ROOT_PASSWORD=root
+            - MYSQL_DATABASE=tempanalizr
+        volumes:
+            - /home/diego/sapidata/:/var/lib/mysql
+            - ./db/container.sql:/docker-entrypoint-initdb.d/init.sql
