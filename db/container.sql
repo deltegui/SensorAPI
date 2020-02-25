@@ -1,4 +1,3 @@
-CREATE DATABASE tempanalizr;
 USE tempanalizr;
 
 CREATE TABLE REPORT_TYPES (
