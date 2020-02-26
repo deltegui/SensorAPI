@@ -13,8 +13,8 @@ services:
         image: mysql:8.0.19
         restart: always
         environment:
-            - MYSQL_ROOT_PASSWORD=root
+            - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
             - MYSQL_DATABASE=tempanalizr
         volumes:
-            - /home/diego/sapidata/:/var/lib/mysql
-            - ./db/container.sql:/docker-entrypoint-initdb.d/init.sql
+            - "./sapidata:/var/lib/mysql"
+            - "./db/container.sql:/docker-entrypoint-initdb.d/init.sql"
