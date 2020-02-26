@@ -41,7 +41,10 @@ func NewReporter(sensorRepo SensorRepo, reportRepo ReportRepo, scheluder ReportS
 
 func (reporter Reporter) Start() {
 	for {
-		sensors := reporter.sensorRepo.GetAll(WithoutDeletedSensors)
+		sensors, err := reporter.sensorRepo.GetAll(WithoutDeletedSensors)
+		if err != nil {
+			return
+		}
 		for _, sensor := range sensors {
 			job := newScheluderJob(sensor, reporter.reportRepo)
 			reporter.scheluder.AddJobEvery(job, sensor.UpdateInterval)

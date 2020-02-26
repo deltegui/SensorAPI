@@ -59,7 +59,7 @@ const (
 
 type SensorRepo interface {
 	Save(Sensor) error
-	GetAll(showDeleted ShowDeleted) []Sensor
+	GetAll(showDeleted ShowDeleted) ([]Sensor, error)
 	GetByName(name string) (Sensor, error)
 	Update(sensor Sensor) bool
 }
@@ -89,4 +89,12 @@ type ReportScheluder interface {
 	AddJobEvery(ScheluderJob, int64)
 	Start() // DEBE SER NO BLOQUEANTE (QUE ARRANQUE UNA CORRUTINA)
 	Stop()
+}
+
+type SensorBuilder interface {
+	WithName(string) SensorBuilder
+	WithConnection(ConnectionType, string) SensorBuilder
+	WithUpdateInterval(int64) SensorBuilder
+	WithSupportedReports([]ReportType) SensorBuilder
+	Build() Sensor
 }

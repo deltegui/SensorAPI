@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"fmt"
 	"log"
 	"sensorapi/src/connectors"
 	"sensorapi/src/domain"
@@ -76,7 +77,7 @@ func (repo SqlxSensorRepo) saveSupportedReportsForSensor(tx *sqlx.Tx, sensor dom
 	return nil
 }
 
-func (repo SqlxSensorRepo) GetAll(showDeleted domain.ShowDeleted) []domain.Sensor {
+func (repo SqlxSensorRepo) GetAll(showDeleted domain.ShowDeleted) ([]domain.Sensor, error) {
 	tx, err := repo.db.Beginx()
 	if err != nil {
 		log.Fatal(err)
@@ -86,16 +87,16 @@ func (repo SqlxSensorRepo) GetAll(showDeleted domain.ShowDeleted) []domain.Senso
 	err = tx.Select(&sensors, "SELECT NAME, CONNTYPE, CONNVALUE, UPDATE_INTERVAL, DELETED FROM SENSORS WHERE DELETED = ?", showDeleted)
 	if err != nil {
 		log.Println(err)
-		return []domain.Sensor{}
+		return []domain.Sensor{}, err
 	}
 	if sensors == nil {
-		return []domain.Sensor{}
+		return []domain.Sensor{}, err
 	}
 	for i := 0; i < len(sensors); i++ {
 		repo.FillSupportedReportsForSensor(tx, &sensors[i])
 		sensors[i].Connector = connectors.HTTPConnector{IP: sensors[i].ConnValue}
 	}
-	return sensors
+	return sensors, nil
 }
 
 func (repo SqlxSensorRepo) FillSupportedReportsForSensor(tx *sqlx.Tx, sensor *domain.Sensor) {
@@ -117,8 +118,8 @@ func (repo SqlxSensorRepo) GetByName(name string) (domain.Sensor, error) {
 	var sensor []domain.Sensor
 	err = tx.Select(&sensor, "SELECT NAME, CONNTYPE, CONNVALUE, UPDATE_INTERVAL, DELETED FROM SENSORS WHERE NAME LIKE ?", name)
 	if err != nil || len(sensor) < 1 {
-		log.Println(err)
-		return domain.Sensor{}, err
+		log.Printf("Sensor not found or error: %s\n", err)
+		return domain.Sensor{}, fmt.Errorf("Sensor not found")
 	}
 	repo.FillSupportedReportsForSensor(tx, &sensor[0])
 	sensor[0].Connector = connectors.HTTPConnector{IP: sensor[0].ConnValue}
