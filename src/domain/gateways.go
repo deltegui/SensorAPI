@@ -98,3 +98,8 @@ type SensorBuilder interface {
 	WithSupportedReports([]ReportType) SensorBuilder
 	Build() Sensor
 }
+
+type ReportQueue interface {
+	Connect()
+	Publish(Report)
+}

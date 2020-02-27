@@ -6,6 +6,7 @@ import (
 	"sensorapi/src/cronscheluder"
 	"sensorapi/src/domain"
 	"sensorapi/src/persistence"
+	"sensorapi/src/queues"
 	"sensorapi/src/validator"
 
 	"github.com/deltegui/locomotive"
@@ -30,6 +31,7 @@ func registerDependencies() {
 	injector.Add(persistence.NewSqlxReportRepo)
 	injector.Add(domain.NewReporter)
 	injector.Add(cronscheluder.NewCronScheluder)
+	injector.Add(queues.NewReportRabbitMQ)
 }
 
 func Register(config configuration.Configuration) {
@@ -37,6 +39,7 @@ func Register(config configuration.Configuration) {
 	registerDependencies()
 	conn := persistence.NewSqlxConnection(config)
 	injector.Add(func() *persistence.SqlxConnection { return &conn })
+	injector.Add(func() configuration.Configuration { return config })
 
 	locomotive.MapRoot(NewErrorController)
 	locomotive.Map("/reporttypes", NewReportTypeController)

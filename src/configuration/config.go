@@ -7,6 +7,7 @@ type Configuration struct {
 	ListenURL      string `paramName:"url"`
 	DatabaseDriver string `paramName:"dbdriver"`
 	Database       string `paramName:"dbname"`
+	RabbitMQ       string `paramName:"rabbit"`
 }
 
 //Load configuration from config.json file and overwrite
