@@ -5,6 +5,7 @@ import (
 	"log"
 	"sensorapi/src/connectors"
 	"sensorapi/src/domain"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -171,6 +172,22 @@ func (repo SqlxReportRepo) GetAll() []domain.Report {
 	defer tx.Commit()
 	var reports []domain.Report
 	err = tx.Select(&reports, "SELECT SENSOR, TYPE, VALUE, REPORT_DATE FROM REPORTS")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return reports
+}
+
+func (repo SqlxReportRepo) GetBetweenDates(from time.Time, to time.Time) []domain.Report {
+	dateFormat := "2006-01-02 15:04:05"
+	log.Printf("SELECT * FROM REPORTS WHERE REPORT_DATE > %s AND REPORT_DATE < %s\n", from.UTC().Format(dateFormat), to.UTC().Format(dateFormat))
+	tx, err := repo.db.Beginx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer tx.Commit()
+	var reports []domain.Report
+	err = tx.Select(&reports, "SELECT SENSOR, TYPE, VALUE, REPORT_DATE FROM REPORTS WHERE REPORT_DATE > ? AND REPORT_DATE < ?", from.UTC().Format(dateFormat), to.UTC().Format(dateFormat))
 	if err != nil {
 		log.Fatal(err)
 	}

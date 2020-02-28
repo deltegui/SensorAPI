@@ -81,6 +81,7 @@ type SensorConnector interface {
 type ReportRepo interface {
 	Save(Report)
 	GetAll() []Report
+	GetBetweenDates(from time.Time, to time.Time) []Report
 }
 
 type ScheluderJob func()

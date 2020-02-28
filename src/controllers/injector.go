@@ -21,6 +21,7 @@ func registerUseCases() {
 	injector.Add(domain.NewSaveSensorCase)
 	injector.Add(domain.NewSensorNowCase)
 	injector.Add(domain.NewUpdateSensorCase)
+	injector.Add(domain.NewGetReportsByDates)
 }
 
 func registerDependencies() {
