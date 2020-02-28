@@ -171,7 +171,7 @@ func (repo SqlxReportRepo) GetAll() []domain.Report {
 	}
 	defer tx.Commit()
 	var reports []domain.Report
-	err = tx.Select(&reports, "SELECT SENSOR, TYPE, VALUE, REPORT_DATE FROM REPORTS")
+	err = tx.Select(&reports, "SELECT R.SENSOR, R.TYPE, R.VALUE, R.REPORT_DATE FROM REPORTS AS R, SENSORS AS S WHERE S.NAME LIKE R.SENSOR AND S.DELETED = 0")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -183,14 +183,13 @@ func (repo SqlxReportRepo) GetAll() []domain.Report {
 
 func (repo SqlxReportRepo) GetBetweenDates(from time.Time, to time.Time) []domain.Report {
 	dateFormat := "2006-01-02 15:04:05"
-	log.Printf("SELECT * FROM REPORTS WHERE REPORT_DATE > %s AND REPORT_DATE < %s\n", from.UTC().Format(dateFormat), to.UTC().Format(dateFormat))
 	tx, err := repo.db.Beginx()
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer tx.Commit()
 	var reports []domain.Report
-	err = tx.Select(&reports, "SELECT SENSOR, TYPE, VALUE, REPORT_DATE FROM REPORTS WHERE REPORT_DATE > ? AND REPORT_DATE < ?", from.UTC().Format(dateFormat), to.UTC().Format(dateFormat))
+	err = tx.Select(&reports, "SELECT R.SENSOR, R.TYPE, R.VALUE, R.REPORT_DATE FROM REPORTS AS R, SENSORS AS S WHERE REPORT_DATE > ? AND REPORT_DATE < ? AND S.NAME LIKE R.SENSOR AND S.DELETED = 0", from.UTC().Format(dateFormat), to.UTC().Format(dateFormat))
 	if err != nil {
 		log.Fatal(err)
 	}

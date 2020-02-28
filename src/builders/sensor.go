@@ -57,7 +57,7 @@ func (builder HttpSensorBuilder) Build() domain.Sensor {
 		ConnType:         builder.conntype,
 		ConnValue:        builder.connvalue,
 		UpdateInterval:   builder.interval,
-		Deleted:          false,
+		Deleted:          builder.deleted,
 		SupportedReports: builder.reportTypes,
 		Connector:        connectors.HTTPConnector{IP: builder.connvalue},
 	}

@@ -97,6 +97,7 @@ type SensorBuilder interface {
 	WithConnection(ConnectionType, string) SensorBuilder
 	WithUpdateInterval(int64) SensorBuilder
 	WithSupportedReports([]ReportType) SensorBuilder
+	IsDeleted(bool) SensorBuilder
 	Build() Sensor
 }
 

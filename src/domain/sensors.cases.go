@@ -24,6 +24,7 @@ func (model SensorViewModel) ToSensor() Sensor {
 		WithConnection(model.Connection.ConnType, model.Connection.ConnValue).
 		WithSupportedReports(model.SupportedReports).
 		WithUpdateInterval(model.UpdateInterval).
+		IsDeleted(model.Deleted).
 		Build()
 }
 
