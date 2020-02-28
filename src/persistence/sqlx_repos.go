@@ -91,7 +91,7 @@ func (repo SqlxSensorRepo) GetAll(showDeleted domain.ShowDeleted) ([]domain.Sens
 		return []domain.Sensor{}, err
 	}
 	if sensors == nil {
-		return []domain.Sensor{}, err
+		return []domain.Sensor{}, nil
 	}
 	for i := 0; i < len(sensors); i++ {
 		repo.FillSupportedReportsForSensor(tx, &sensors[i])
@@ -175,6 +175,9 @@ func (repo SqlxReportRepo) GetAll() []domain.Report {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if reports == nil {
+		return []domain.Report{}
+	}
 	return reports
 }
 
@@ -190,6 +193,9 @@ func (repo SqlxReportRepo) GetBetweenDates(from time.Time, to time.Time) []domai
 	err = tx.Select(&reports, "SELECT SENSOR, TYPE, VALUE, REPORT_DATE FROM REPORTS WHERE REPORT_DATE > ? AND REPORT_DATE < ?", from.UTC().Format(dateFormat), to.UTC().Format(dateFormat))
 	if err != nil {
 		log.Fatal(err)
+	}
+	if reports == nil {
+		return []domain.Report{}
 	}
 	return reports
 }
