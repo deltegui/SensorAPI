@@ -43,11 +43,13 @@ type Sensor struct {
 }
 
 func (sensor Sensor) GetCurrentState() ([]Report, error) {
-	reports, err := sensor.Connector.ReadDataFor(sensor)
-	if err != nil {
-		return reports, SensorNotRespondErr
+	for i := 0; i < 2; i++ {
+		reports, err := sensor.Connector.ReadDataFor(sensor)
+		if err == nil {
+			return reports, nil
+		}
 	}
-	return reports, nil
+	return []Report{}, SensorNotRespondErr
 }
 
 type ShowDeleted bool
