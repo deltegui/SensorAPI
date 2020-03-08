@@ -35,6 +35,7 @@ func CreateViewModelFromSensor(sensor Sensor) SensorViewModel {
 			ConnType:  sensor.ConnType,
 			ConnValue: sensor.ConnValue,
 		},
+		Deleted:          sensor.Deleted,
 		UpdateInterval:   sensor.UpdateInterval,
 		SupportedReports: sensor.SupportedReports,
 	}
@@ -65,7 +66,7 @@ func (useCase GetAllSensorsCase) Exec(presenter Presenter, req UseCaseRequest) {
 		presenter.PresentError(SensorNotFoundErr)
 		return
 	}
-	var viewModels []SensorViewModel
+	viewModels := []SensorViewModel{}
 	for _, sensor := range sensors {
 		viewModels = append(viewModels, CreateViewModelFromSensor(sensor))
 	}

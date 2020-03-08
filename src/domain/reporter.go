@@ -30,8 +30,9 @@ type Reporter struct {
 }
 
 func NewReporter(sensorRepo SensorRepo, reportRepo ReportRepo, scheluder ReportScheluder, queue ReportQueue) Reporter {
-	queue.Connect()
 	if globalReporter == nil {
+		log.Println("Created reporter")
+		queue.Connect()
 		globalReporter = &Reporter{
 			sensorRepo:  sensorRepo,
 			reportRepo:  reportRepo,
