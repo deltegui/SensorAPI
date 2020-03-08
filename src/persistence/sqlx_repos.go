@@ -101,10 +101,11 @@ func (repo SqlxSensorRepo) GetAll(showDeleted domain.ShowDeleted) ([]domain.Sens
 }
 
 func (repo SqlxSensorRepo) FillSupportedReportsForSensor(tx *sqlx.Tx, sensor *domain.Sensor) {
-	var reports []domain.ReportType
+	var reports []domain.ReportType = []domain.ReportType{}
 	err := tx.Select(&reports, "SELECT REPORT_TYPE FROM USED_REPORT_TYPES WHERE SENSOR LIKE ?", sensor.Name)
 	if err != nil {
 		log.Println(err)
+		sensor.SupportedReports = []domain.ReportType{}
 		return
 	}
 	sensor.SupportedReports = reports
