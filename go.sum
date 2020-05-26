@@ -1,8 +1,10 @@
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/deltegui/configloader v1.0.1 h1:4f82hDrI6x9+c7wlcaEAOOuoPK1SxywVLRIMPW8xHbQ=
 github.com/deltegui/configloader v1.0.1/go.mod h1:ClfIx7ZcwQANyhdNXnsq4UR2PIGlwObTzZEerlTO2Vc=
-github.com/deltegui/locomotive v0.4.0 h1:LacCd12I5nCO0/irXzX2JhqyJrlaaHtMvUG05V3QeY0=
-github.com/deltegui/locomotive v0.4.0/go.mod h1:/zfbF3zxhZ3+TglpXwfqnzXYtnHZdj1W9uULoEH8TX4=
+github.com/deltegui/phoenix v0.4.0 h1:LacCd12I5nCO0/irXzX2JhqyJrlaaHtMvUG05V3QeY0=
+github.com/deltegui/phoenix v0.4.0/go.mod h1:/zfbF3zxhZ3+TglpXwfqnzXYtnHZdj1W9uULoEH8TX4=
+github.com/deltegui/phoenix v0.10.4 h1:bWDyOv3pgFeqXSvPNaX13gPe4j9AWhFxisXIUycsS6w=
+github.com/deltegui/phoenix v0.10.4/go.mod h1:HjxqFf4zxoya3SKxtJaB7MhM0caq6m93xq+dDLQFv98=
 github.com/denisenkom/go-mssqldb v0.0.0-20191124224453-732737034ffd/go.mod h1:xbL0rPBG9cCiLr28tMa8zpbdarY27NDyej4t/EjAShU=
 github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5/go.mod h1:a2zkGnVExMxdzMo3M0Hi/3sEU+cWnZpSni0O6/Yb/P0=
 github.com/go-playground/locales v0.13.0 h1:HyWk6mgj5qFqCT5fjGBuRArbVDfE4hi8+e8ceBS/t7Q=
@@ -19,6 +21,8 @@ github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe/go.mod h1:8vg3r2V
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/gorilla/mux v1.7.3 h1:gnP5JzjVOuiZD07fKKToCAOjS0yOpj/qPETTXCCS6hw=
 github.com/gorilla/mux v1.7.3/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
+github.com/gorilla/mux v1.7.4 h1:VuZ8uybHlWmqV03+zRzdwKL4tUnIp1MAQtp1mIFE1bc=
+github.com/gorilla/mux v1.7.4/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
 github.com/jinzhu/gorm v1.9.12/go.mod h1:vhTjlKSJUTWNtcbQtrMBFCxy7eXTzeCAzfL5fBZT/Qs=
 github.com/jinzhu/inflection v1.0.0/go.mod h1:h+uFLlag+Qp1Va5pdKtLDYj+kHp5pxUVkryuEj+Srlc=
 github.com/jinzhu/now v1.0.1/go.mod h1:d3SSVoowX0Lcu0IBviAWJpolVfI5UJVZZ7cO71lE/z8=

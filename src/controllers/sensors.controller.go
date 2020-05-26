@@ -5,37 +5,31 @@ import (
 
 	"net/http"
 
-	"github.com/deltegui/locomotive"
+	"github.com/deltegui/phoenix"
 )
 
-type SensorsController struct {
-	getAllSensorsCase domain.UseCase
-	allSensorNowCase  domain.UseCase
-}
-
-func NewSensorsController(getAllSensorsCase domain.GetAllSensorsCase, allSensorNowCase domain.AllSensorNowCase) SensorsController {
-	return SensorsController{
-		getAllSensorsCase,
-		allSensorNowCase,
+func GetAllSensors(getAllSensorsCase domain.GetAllSensorsCase) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		presenter := NewJSONPresenter(w)
+		wantDeleted := req.URL.Query()["deleted"]
+		var reqCase domain.GetAllRequest
+		reqCase.WantDeleted = !(len(wantDeleted) < 1 || len(wantDeleted[0]) == 0 || wantDeleted[0] == "false")
+		getAllSensorsCase.Exec(presenter, reqCase)
 	}
 }
 
-func (controller SensorsController) GetAllSensors(w http.ResponseWriter, req *http.Request) {
-	presenter := locomotive.JSONPresenter{w}
-	wantDeleted := req.URL.Query()["deleted"]
-	var reqCase domain.GetAllRequest
-	reqCase.WantDeleted = !(len(wantDeleted) < 1 || len(wantDeleted[0]) == 0 || wantDeleted[0] == "false")
-	controller.getAllSensorsCase.Exec(presenter, reqCase)
-}
-
-func (controller SensorsController) AllSensorNow(w http.ResponseWriter, req *http.Request) {
-	presenter := locomotive.JSONPresenter{w}
-	controller.allSensorNowCase.Exec(presenter, nil)
-}
-
-func (controller SensorsController) GetMappings() []locomotive.Mapping {
-	return []locomotive.Mapping{
-		{Method: locomotive.Get, Handler: controller.GetAllSensors, Endpoint: ""},
-		{Method: locomotive.Get, Handler: controller.AllSensorNow, Endpoint: "/all/now"},
+func AllSensorNow(allSensorNowCase domain.AllSensorNowCase) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		presenter := NewJSONPresenter(w)
+		allSensorNowCase.Exec(presenter, nil)
 	}
+}
+
+func registerSensorsRoutes() {
+	phoenix.MapGroup("/sensors", func(m phoenix.Mapper) {
+		m.MapAll([]phoenix.Mapping{
+			{Method: phoenix.Get, Builder: GetAllSensors, Endpoint: ""},
+			{Method: phoenix.Get, Builder: AllSensorNow, Endpoint: "/all/now"},
+		})
+	})
 }

@@ -6,82 +6,68 @@ import (
 
 	"net/http"
 
-	"github.com/deltegui/locomotive"
+	"github.com/deltegui/phoenix"
 	"github.com/gorilla/mux"
 )
 
-type SensorController struct {
-	saveSensorCase   domain.UseCase
-	deleteSensorCase domain.UseCase
-	updateSensorCase domain.UseCase
-	sensorNowCase    domain.UseCase
-	getSensorCase    domain.UseCase
-	SensorBuilder    domain.SensorBuilder
+func registerSensorRoutes() {
+	phoenix.MapGroup("/sensor", func(mapper phoenix.Mapper) {
+		mapper.MapAll([]phoenix.Mapping{
+			{Method: phoenix.Post, Builder: SaveSensor, Endpoint: ""},
+			{Method: phoenix.Get, Builder: GetSensorByName, Endpoint: "/{name}"},
+			{Method: phoenix.Delete, Builder: DeleteSensorByName, Endpoint: "/{name}"},
+			{Method: phoenix.Post, Builder: UpdateSensor, Endpoint: "/update"},
+			{Method: phoenix.Get, Builder: SensorNow, Endpoint: "/{name}/now"},
+		})
+	})
 }
 
-func NewSensorController(
-	saveSensorCase domain.SaveSensorCase,
-	deleteSensorCase domain.DeleteSensorCase,
-	updateSensorCase domain.UpdateSensorCase,
-	sensorNowCase domain.SensorNowCase,
-	getSensorCase domain.GetSensorCase,
-	builder domain.SensorBuilder) SensorController {
-	return SensorController{
-		saveSensorCase,
-		deleteSensorCase,
-		updateSensorCase,
-		sensorNowCase,
-		getSensorCase,
-		builder,
+func SaveSensor(saveSensorCase domain.SaveSensorCase, builder domain.SensorBuilder) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		presenter := NewJSONPresenter(w)
+		var viewModel domain.SensorViewModel
+		if err := json.NewDecoder(req.Body).Decode(&viewModel); err != nil {
+			presenter.PresentError(domain.MalformedRequestErr)
+			return
+		}
+		viewModel.SensorBuilder = builder
+		saveSensorCase.Exec(presenter, viewModel)
 	}
 }
 
-func (controller SensorController) SaveSensor(w http.ResponseWriter, req *http.Request) {
-	presenter := locomotive.JSONPresenter{w}
-	var viewModel domain.SensorViewModel
-	if err := json.NewDecoder(req.Body).Decode(&viewModel); err != nil {
-		presenter.PresentError(domain.MalformedRequestErr)
-		return
+func GetSensorByName(getSensorCase domain.GetSensorCase) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		presenter := NewJSONPresenter(w)
+		sensorName := mux.Vars(req)["name"]
+		getSensorCase.Exec(presenter, sensorName)
 	}
-	viewModel.SensorBuilder = controller.SensorBuilder
-	controller.saveSensorCase.Exec(presenter, viewModel)
 }
 
-func (controller SensorController) GetSensorByName(w http.ResponseWriter, req *http.Request) {
-	presenter := locomotive.JSONPresenter{w}
-	sensorName := mux.Vars(req)["name"]
-	controller.getSensorCase.Exec(presenter, sensorName)
-}
-
-func (controller SensorController) DeleteSensorByName(w http.ResponseWriter, req *http.Request) {
-	presenter := locomotive.JSONPresenter{w}
-	sensorName := mux.Vars(req)["name"]
-	controller.deleteSensorCase.Exec(presenter, sensorName)
-}
-
-func (controller SensorController) UpdateSensor(w http.ResponseWriter, req *http.Request) {
-	presenter := locomotive.JSONPresenter{w}
-	var viewModel domain.SensorViewModel
-	if err := json.NewDecoder(req.Body).Decode(&viewModel); err != nil {
-		presenter.PresentError(domain.MalformedRequestErr)
-		return
+func DeleteSensorByName(deleteSensorCase domain.DeleteSensorCase) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		presenter := NewJSONPresenter(w)
+		sensorName := mux.Vars(req)["name"]
+		deleteSensorCase.Exec(presenter, sensorName)
 	}
-	viewModel.SensorBuilder = controller.SensorBuilder
-	controller.updateSensorCase.Exec(presenter, viewModel)
 }
 
-func (controller SensorController) SensorNow(w http.ResponseWriter, req *http.Request) {
-	presenter := locomotive.JSONPresenter{w}
-	sensorName := mux.Vars(req)["name"]
-	controller.sensorNowCase.Exec(presenter, sensorName)
+func UpdateSensor(updateSensorCase domain.UpdateSensorCase, builder domain.SensorBuilder) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		presenter := NewJSONPresenter(w)
+		var viewModel domain.SensorViewModel
+		if err := json.NewDecoder(req.Body).Decode(&viewModel); err != nil {
+			presenter.PresentError(domain.MalformedRequestErr)
+			return
+		}
+		viewModel.SensorBuilder = builder
+		updateSensorCase.Exec(presenter, viewModel)
+	}
 }
 
-func (controller SensorController) GetMappings() []locomotive.Mapping {
-	return []locomotive.Mapping{
-		{Method: locomotive.Post, Handler: controller.SaveSensor, Endpoint: ""},
-		{Method: locomotive.Get, Handler: controller.GetSensorByName, Endpoint: "/{name}"},
-		{Method: locomotive.Delete, Handler: controller.DeleteSensorByName, Endpoint: "/{name}"},
-		{Method: locomotive.Post, Handler: controller.UpdateSensor, Endpoint: "/update"},
-		{Method: locomotive.Get, Handler: controller.SensorNow, Endpoint: "/{name}/now"},
+func SensorNow(sensorNowCase domain.SensorNowCase) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		presenter := NewJSONPresenter(w)
+		sensorName := mux.Vars(req)["name"]
+		sensorNowCase.Exec(presenter, sensorName)
 	}
 }

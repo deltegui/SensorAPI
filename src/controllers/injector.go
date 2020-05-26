@@ -9,8 +9,8 @@ import (
 	"sensorapi/src/queues"
 	"sensorapi/src/validator"
 
-	"github.com/deltegui/locomotive"
-	"github.com/deltegui/locomotive/injector"
+	"github.com/deltegui/phoenix"
+	"github.com/deltegui/phoenix/injector"
 )
 
 func registerUseCases() {
@@ -42,9 +42,9 @@ func Register(config configuration.Configuration) {
 	injector.Add(func() *persistence.SqlxConnection { return &conn })
 	injector.Add(func() configuration.Configuration { return config })
 
-	locomotive.MapRoot(NewErrorController)
-	locomotive.Map("/reporttypes", NewReportTypeController)
-	locomotive.Map("/sensors", NewSensorsController)
-	locomotive.Map("/sensor", NewSensorController)
-	locomotive.Map("/reports", NewReportController)
+	phoenix.Map(phoenix.Mapping{Method: phoenix.Get, Builder: NotFound, Endpoint: "404"})
+	phoenix.MapController("/reporttypes", NewReportTypeController)
+	registerSensorsRoutes()
+	registerSensorRoutes()
+	registerReportRoutes()
 }

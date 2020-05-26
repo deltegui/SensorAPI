@@ -7,21 +7,37 @@ import (
 	"sensorapi/src/domain"
 	"time"
 
-	"github.com/deltegui/locomotive"
+	"github.com/deltegui/phoenix"
 )
 
-type ReportController struct {
-	reportRepo       domain.ReportRepo
-	getReportsByDate domain.UseCase
+func GetAllReports(reportRepo domain.ReportRepo) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		presenter := phoenix.JSONRenderer{w}
+		presenter.Render(reportRepo.GetAll())
+	}
 }
 
-func NewReportController(reportRepo domain.ReportRepo, getReportsByDate domain.GetReportsByDates) ReportController {
-	return ReportController{reportRepo, getReportsByDate}
-}
-
-func (controller ReportController) GetAllReports(w http.ResponseWriter, req *http.Request) {
-	presenter := locomotive.JSONPresenter{w}
-	presenter.Present(controller.reportRepo.GetAll())
+func GetReportsBetweenDates(getReportsByDate domain.GetReportsByDates) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		presenter := JSONPresenter{phoenix.JSONRenderer{w}}
+		from, err := getDateFrom(req, "from")
+		if err != nil {
+			log.Println(err)
+			presenter.PresentError(domain.MalformedRequestErr)
+			return
+		}
+		to, err := getDateFrom(req, "to")
+		if err != nil {
+			log.Println(err)
+			presenter.PresentError(domain.MalformedRequestErr)
+			return
+		}
+		log.Println(from, to)
+		getReportsByDate.Exec(presenter, domain.ReportsByDatesRequest{
+			From: from,
+			To:   to,
+		})
+	}
 }
 
 func getQueryFrom(req *http.Request, query string) (string, error) {
@@ -45,30 +61,11 @@ func getDateFrom(req *http.Request, query string) (time.Time, error) {
 	return date, nil
 }
 
-func (controller ReportController) GetReportsBetweenDates(w http.ResponseWriter, req *http.Request) {
-	presenter := locomotive.JSONPresenter{w}
-	from, err := getDateFrom(req, "from")
-	if err != nil {
-		log.Println(err)
-		presenter.PresentError(domain.MalformedRequestErr)
-		return
-	}
-	to, err := getDateFrom(req, "to")
-	if err != nil {
-		log.Println(err)
-		presenter.PresentError(domain.MalformedRequestErr)
-		return
-	}
-	log.Println(from, to)
-	controller.getReportsByDate.Exec(presenter, domain.ReportsByDatesRequest{
-		From: from,
-		To:   to,
+func registerReportRoutes() {
+	phoenix.MapGroup("/routes", func(m phoenix.Mapper) {
+		m.MapAll([]phoenix.Mapping{
+			{Method: phoenix.Get, Builder: GetAllReports, Endpoint: "/"},
+			{Method: phoenix.Get, Builder: GetReportsBetweenDates, Endpoint: "/dates"},
+		})
 	})
-}
-
-func (controller ReportController) GetMappings() []locomotive.Mapping {
-	return []locomotive.Mapping{
-		{Method: locomotive.Get, Handler: controller.GetAllReports, Endpoint: "/"},
-		{Method: locomotive.Get, Handler: controller.GetReportsBetweenDates, Endpoint: "/dates"},
-	}
 }

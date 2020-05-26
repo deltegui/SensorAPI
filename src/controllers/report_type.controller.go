@@ -6,7 +6,7 @@ import (
 
 	"net/http"
 
-	"github.com/deltegui/locomotive"
+	"github.com/deltegui/phoenix"
 	"github.com/gorilla/mux"
 )
 
@@ -19,24 +19,24 @@ func NewReportTypeController(reportTypeRepo domain.ReportTypeRepo) ReportTypeCon
 }
 
 func (controller ReportTypeController) GetReportTypes(w http.ResponseWriter, req *http.Request) {
-	presenter := locomotive.JSONPresenter{w}
-	presenter.Present(controller.reportTypeRepo.GetAll())
+	renderer := phoenix.JSONRenderer{w}
+	renderer.Render(controller.reportTypeRepo.GetAll())
 }
 
 func (controller ReportTypeController) SaveReportType(w http.ResponseWriter, req *http.Request) {
-	presenter := locomotive.JSONPresenter{w}
+	renderer := phoenix.JSONRenderer{w}
 	reportType := domain.ReportType(mux.Vars(req)["name"])
 	if err := controller.reportTypeRepo.Save(reportType); err != nil {
 		log.Println(err)
-		presenter.PresentError(domain.MalformedRequestErr)
+		renderer.RenderError(domain.MalformedRequestErr)
 		return
 	}
-	presenter.Present(struct{ ReportType domain.ReportType }{reportType})
+	renderer.Render(struct{ ReportType domain.ReportType }{reportType})
 }
 
-func (controller ReportTypeController) GetMappings() []locomotive.Mapping {
-	return []locomotive.Mapping{
-		{Method: locomotive.Get, Handler: controller.GetReportTypes, Endpoint: "/all"},
-		{Method: locomotive.Post, Handler: controller.SaveReportType, Endpoint: "/create/{name}"},
+func (controller ReportTypeController) GetMappings() []phoenix.CMapping {
+	return []phoenix.CMapping{
+		{Method: phoenix.Get, Handler: controller.GetReportTypes, Endpoint: "/all"},
+		{Method: phoenix.Post, Handler: controller.SaveReportType, Endpoint: "/create/{name}"},
 	}
 }
