@@ -8,6 +8,7 @@ type Presenter interface {
 }
 
 type UseCaseRequest interface{}
+type UseCaseResponse interface{}
 
 var EmptyRequest UseCaseRequest = struct{}{}
 
@@ -103,7 +104,21 @@ type SensorBuilder interface {
 	Build() Sensor
 }
 
-type ReportQueue interface {
-	Connect()
-	Publish(Report)
+type UserRole string
+
+const (
+	AdminUserRole    UserRole = "ADMIN"
+	AnalystTUserRole UserRole = "ANALYST"
+)
+
+type User struct {
+	Name     string   `db:"NAME"`
+	Password string   `db:"PASSWORD"`
+	Role     UserRole `db:"ROLE"`
+}
+
+type UserRepo interface {
+	GetUserByName(name string) (User, error)
+	GetAll() []User
+	Save(user User)
 }

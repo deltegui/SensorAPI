@@ -25,3 +25,8 @@ var (
 	SensorAlreadyExist      = UseCaseError{Code: 102, Reason: "Sensor already exists", Fix: "Use the sensor"}
 	ReportTypeDoesNotExists = UseCaseError{Code: 200, Reason: "ReportType does not exits", Fix: "Create a new ReportType"}
 )
+
+var (
+	UserNotFoundErr     = UseCaseError{Code: 200, Reason: "User not found", Fix: "Use an existing user"}
+	NotValidPasswordErr = UseCaseError{Code: 201, Reason: "Password is not valid", Fix: "Try again"}
+)

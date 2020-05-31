@@ -13,6 +13,8 @@ import (
 func main() {
 	phoenix.Configure().
 		SetProjectInfo("sensorapi", "0.1.0").
+		EnableStaticServer().
+		EnableTemplates().
 		EnableLogoFile()
 	config := configuration.Load()
 	controllers.Register(config)

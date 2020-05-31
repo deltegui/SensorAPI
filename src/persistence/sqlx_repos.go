@@ -199,3 +199,51 @@ func (repo SqlxReportRepo) GetBetweenDates(from time.Time, to time.Time) []domai
 	}
 	return reports
 }
+
+type SqlxUserRepo struct {
+	db *sqlx.DB
+}
+
+func NewSqlxUserRepo(conn *SqlxConnection) domain.UserRepo {
+	return SqlxUserRepo{conn.GetConnection()}
+}
+
+func (repo SqlxUserRepo) GetUserByName(name string) (domain.User, error) {
+	users := repo.GetAll()
+	for _, user := range users {
+		if user.Name == name {
+			return user, nil
+		}
+	}
+	return domain.User{}, fmt.Errorf("User not found")
+}
+
+func (repo SqlxUserRepo) GetAll() []domain.User {
+	tx, err := repo.db.Beginx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer tx.Commit()
+	var users []domain.User
+	err = tx.Select(&users, "SELECT NAME, PASSWORD, ROLE FROM USERS")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if users == nil {
+		return []domain.User{}
+	}
+	return users
+}
+
+func (repo SqlxUserRepo) Save(user domain.User) {
+	insert := "INSERT INTO USERS (NAME, PASSWORD, ROLE) VALUES(?, ?, ?)"
+	tx, err := repo.db.Beginx()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer tx.Commit()
+	_, err = tx.Exec(insert, user.Name, user.Password, user.Role)
+	if err != nil {
+		log.Fatal(err)
+	}
+}

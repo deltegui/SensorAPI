@@ -6,7 +6,6 @@ import (
 	"sensorapi/src/cronscheluder"
 	"sensorapi/src/domain"
 	"sensorapi/src/persistence"
-	"sensorapi/src/queues"
 	"sensorapi/src/validator"
 
 	"github.com/deltegui/phoenix"
@@ -22,6 +21,7 @@ func registerUseCases() {
 	injector.Add(domain.NewSensorNowCase)
 	injector.Add(domain.NewUpdateSensorCase)
 	injector.Add(domain.NewGetReportsByDates)
+	injector.Add(domain.NewLoginUserCase)
 }
 
 func registerDependencies() {
@@ -30,9 +30,9 @@ func registerDependencies() {
 	injector.Add(persistence.NewSqlxReportTypeRepo)
 	injector.Add(persistence.NewSqlxSensorRepo)
 	injector.Add(persistence.NewSqlxReportRepo)
+	injector.Add(persistence.NewSqlxUserRepo)
 	injector.Add(domain.NewReporter)
 	injector.Add(cronscheluder.NewCronScheluder)
-	injector.Add(queues.NewReportRabbitMQ)
 }
 
 func Register(config configuration.Configuration) {
@@ -43,8 +43,9 @@ func Register(config configuration.Configuration) {
 	injector.Add(func() configuration.Configuration { return config })
 
 	phoenix.Map(phoenix.Mapping{Method: phoenix.Get, Builder: NotFound, Endpoint: "404"})
-	phoenix.MapController("/reporttypes", NewReportTypeController)
+	registerReportTypesRoutes()
 	registerSensorsRoutes()
 	registerSensorRoutes()
 	registerReportRoutes()
+	registerUserRoutes()
 }
