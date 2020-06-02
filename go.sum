@@ -9,6 +9,8 @@ github.com/deltegui/phoenix v0.10.5 h1:Gfb8xQQ+DN3iUgfB7OvajempY+NoK0XcgRDFTlS+q
 github.com/deltegui/phoenix v0.10.5/go.mod h1:HChoOgOF50Wam0BbN0GZo9UWo3thGfrFZnFfERtfxDE=
 github.com/deltegui/phoenix v0.10.7 h1:wANo1PCkHDH+27BOF7m3Xw3mEJUo5mmo0BbCa0fLwh0=
 github.com/deltegui/phoenix v0.10.7/go.mod h1:HChoOgOF50Wam0BbN0GZo9UWo3thGfrFZnFfERtfxDE=
+github.com/deltegui/phoenix v0.11.7 h1:DMnEaRyVO5ccK1QBC4Tla79Psv78SsDgAkdLfNY4IU0=
+github.com/deltegui/phoenix v0.11.7/go.mod h1:HChoOgOF50Wam0BbN0GZo9UWo3thGfrFZnFfERtfxDE=
 github.com/denisenkom/go-mssqldb v0.0.0-20191124224453-732737034ffd/go.mod h1:xbL0rPBG9cCiLr28tMa8zpbdarY27NDyej4t/EjAShU=
 github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5/go.mod h1:a2zkGnVExMxdzMo3M0Hi/3sEU+cWnZpSni0O6/Yb/P0=
 github.com/go-playground/locales v0.13.0 h1:HyWk6mgj5qFqCT5fjGBuRArbVDfE4hi8+e8ceBS/t7Q=

@@ -10,64 +10,87 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func registerSensorRoutes() {
-	phoenix.MapGroup("/sensor", func(mapper phoenix.Mapper) {
-		mapper.MapAll([]phoenix.Mapping{
-			{Method: phoenix.Post, Builder: SaveSensor, Endpoint: ""},
-			{Method: phoenix.Get, Builder: GetSensorByName, Endpoint: "/{name}"},
-			{Method: phoenix.Delete, Builder: DeleteSensorByName, Endpoint: "/{name}"},
-			{Method: phoenix.Post, Builder: UpdateSensor, Endpoint: "/update"},
-			{Method: phoenix.Get, Builder: SensorNow, Endpoint: "/{name}/now"},
-		})
+func registerSensorRoutes(app phoenix.App) {
+	app.MapGroup("/sensor", func(m phoenix.Mapper) {
+		m.Post("", SaveSensor)
+		m.Get("/{name}", GetSensorByName)
+		m.Delete("/{name}", DeleteSensorByName)
+		m.Post("/update", UpdateSensor)
+		m.Get("/{name}/now", SensorNow)
 	})
 }
 
-func SaveSensor(saveSensorCase domain.SaveSensorCase, builder domain.SensorBuilder) http.HandlerFunc {
+func SaveSensor(saveSensor domain.SaveSensorCase, builder domain.SensorBuilder) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		presenter := NewJSONPresenter(w)
+		renderer := phoenix.NewJSONRenderer(w)
 		var viewModel domain.SensorViewModel
 		if err := json.NewDecoder(req.Body).Decode(&viewModel); err != nil {
-			presenter.PresentError(domain.MalformedRequestErr)
+			renderer.RenderError(domain.MalformedRequestErr)
 			return
 		}
 		viewModel.SensorBuilder = builder
-		saveSensorCase.Exec(presenter, viewModel)
+		response, err := saveSensor(viewModel)
+		if err != nil {
+			renderer.RenderError(err)
+			return
+		}
+		renderer.Render(response)
 	}
 }
 
-func GetSensorByName(getSensorCase domain.GetSensorCase) http.HandlerFunc {
+func GetSensorByName(getSensorBy domain.GetSensorCase) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		presenter := NewJSONPresenter(w)
-		sensorName := mux.Vars(req)["name"]
-		getSensorCase.Exec(presenter, sensorName)
+		renderer := phoenix.NewJSONRenderer(w)
+		name := mux.Vars(req)["name"]
+		sensor, err := getSensorBy(name)
+		if err != nil {
+			renderer.RenderError(err)
+			return
+		}
+		renderer.Render(sensor)
 	}
 }
 
-func DeleteSensorByName(deleteSensorCase domain.DeleteSensorCase) http.HandlerFunc {
+func DeleteSensorByName(deleteSensorBy domain.DeleteSensorCase) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		presenter := NewJSONPresenter(w)
-		sensorName := mux.Vars(req)["name"]
-		deleteSensorCase.Exec(presenter, sensorName)
+		renderer := phoenix.NewJSONRenderer(w)
+		name := mux.Vars(req)["name"]
+		sensor, err := deleteSensorBy(name)
+		if err != nil {
+			renderer.RenderError(err)
+			return
+		}
+		renderer.Render(sensor)
 	}
 }
 
 func UpdateSensor(updateSensorCase domain.UpdateSensorCase, builder domain.SensorBuilder) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		presenter := NewJSONPresenter(w)
+		renderer := phoenix.NewJSONRenderer(w)
 		var viewModel domain.SensorViewModel
 		if err := json.NewDecoder(req.Body).Decode(&viewModel); err != nil {
-			presenter.PresentError(domain.MalformedRequestErr)
+			renderer.RenderError(domain.MalformedRequestErr)
 			return
 		}
 		viewModel.SensorBuilder = builder
-		updateSensorCase.Exec(presenter, viewModel)
+		sensor, err := updateSensorCase(viewModel)
+		if err != nil {
+			renderer.RenderError(err)
+			return
+		}
+		renderer.Render(sensor)
 	}
 }
 
 func SensorNow(sensorNowCase domain.SensorNowCase) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		presenter := NewJSONPresenter(w)
+		renderer := phoenix.NewJSONRenderer(w)
 		sensorName := mux.Vars(req)["name"]
-		sensorNowCase.Exec(presenter, sensorName)
+		response, err := sensorNowCase(sensorName)
+		if err != nil {
+			renderer.RenderError(err)
+			return
+		}
+		renderer.Render(response)
 	}
 }

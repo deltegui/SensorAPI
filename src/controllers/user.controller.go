@@ -23,7 +23,7 @@ func ProcessUserLogin(execUserCase domain.LoginUserCase) http.HandlerFunc {
 		user := req.Form.Get("name")
 		pass := req.Form.Get("password")
 		log.Printf("User: %s, password: %s\n", user, pass)
-		response, err := execUserCase(domain.LoginUserRequest{
+		_, err := execUserCase(domain.LoginUserRequest{
 			UserName:     user,
 			UserPassword: pass,
 		})
@@ -35,11 +35,10 @@ func ProcessUserLogin(execUserCase domain.LoginUserCase) http.HandlerFunc {
 	}
 }
 
-func registerUserRoutes() {
-	phoenix.MapGroup("/user", func(m phoenix.Mapper) {
-		m.MapAll([]phoenix.Mapping{
-			{Method: phoenix.Get, Builder: UserIndex, Endpoint: "/login"},
-			{Method: phoenix.Post, Builder: ProcessUserLogin, Endpoint: "/login"},
-		}, phoenix.NewCSRFMiddleware())
+func registerUserRoutes(app phoenix.App) {
+	app.MapGroup("/user", func(m phoenix.Mapper) {
+		csrf := phoenix.NewCSRFMiddleware()
+		m.Get("/login", UserIndex, csrf)
+		m.Post("/login", ProcessUserLogin, csrf)
 	})
 }

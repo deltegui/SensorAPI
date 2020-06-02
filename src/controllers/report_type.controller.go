@@ -12,14 +12,13 @@ import (
 
 func GetReportTypes(reportTypeRepo domain.ReportTypeRepo) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		renderer := phoenix.JSONRenderer{w}
-		renderer.Render(reportTypeRepo.GetAll())
+		phoenix.NewJSONRenderer(w).Render(reportTypeRepo.GetAll())
 	}
 }
 
 func SaveReportType(reportTypeRepo domain.ReportTypeRepo) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		renderer := phoenix.JSONRenderer{w}
+		renderer := phoenix.NewJSONRenderer(w)
 		reportType := domain.ReportType(mux.Vars(req)["name"])
 		if err := reportTypeRepo.Save(reportType); err != nil {
 			log.Println(err)
@@ -30,11 +29,9 @@ func SaveReportType(reportTypeRepo domain.ReportTypeRepo) http.HandlerFunc {
 	}
 }
 
-func registerReportTypesRoutes() {
-	phoenix.MapGroup("/reporttypes", func(m phoenix.Mapper) {
-		m.MapAll([]phoenix.Mapping{
-			{Method: phoenix.Get, Builder: GetReportTypes, Endpoint: "/all"},
-			{Method: phoenix.Post, Builder: SaveReportType, Endpoint: "/create/{name}"},
-		})
+func registerReportTypesRoutes(app phoenix.App) {
+	app.MapGroup("/reporttypes", func(m phoenix.Mapper) {
+		m.Get("/all", GetReportTypes)
+		m.Post("/create/{name}", SaveReportType)
 	})
 }

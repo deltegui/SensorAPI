@@ -9,20 +9,15 @@ type ReportsByDatesRequest struct {
 	To   time.Time `validate:"required" json:"to"`
 }
 
-type GetReportsByDates struct {
-	reportRepo ReportRepo
-	validator  Validator
-}
+type GetReportsByDates UseCase
 
 func NewGetReportsByDates(reportRepo ReportRepo, validator Validator) GetReportsByDates {
-	return GetReportsByDates{reportRepo, validator}
-}
-
-func (useCase GetReportsByDates) Exec(presenter Presenter, req UseCaseRequest) {
-	datesReq := req.(ReportsByDatesRequest)
-	if err := useCase.validator.Validate(datesReq); err != nil {
-		presenter.PresentError(MalformedRequestErr)
-		return
+	return func(req UseCaseRequest) (UseCaseResponse, error) {
+		datesReq := req.(ReportsByDatesRequest)
+		if err := validator.Validate(datesReq); err != nil {
+			return nil, MalformedRequestErr
+		}
+		reports := reportRepo.GetBetweenDates(datesReq.From, datesReq.To)
+		return reports, nil
 	}
-	presenter.Present(useCase.reportRepo.GetBetweenDates(datesReq.From, datesReq.To))
 }

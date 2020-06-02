@@ -12,9 +12,7 @@ type UseCaseResponse interface{}
 
 var EmptyRequest UseCaseRequest = struct{}{}
 
-type UseCase interface {
-	Exec(Presenter, UseCaseRequest)
-}
+type UseCase func(req UseCaseRequest) (UseCaseResponse, error)
 
 type Validator interface {
 	Validate(interface{}) error

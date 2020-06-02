@@ -12,31 +12,36 @@ import (
 
 func GetAllReports(reportRepo domain.ReportRepo) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		presenter := phoenix.JSONRenderer{w}
-		presenter.Render(reportRepo.GetAll())
+		renderer := phoenix.JSONRenderer{w}
+		renderer.Render(reportRepo.GetAll())
 	}
 }
 
 func GetReportsBetweenDates(getReportsByDate domain.GetReportsByDates) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		presenter := JSONPresenter{phoenix.JSONRenderer{w}}
+		renderer := phoenix.NewJSONRenderer(w)
 		from, err := getDateFrom(req, "from")
 		if err != nil {
 			log.Println(err)
-			presenter.PresentError(domain.MalformedRequestErr)
+			renderer.RenderError(domain.MalformedRequestErr)
 			return
 		}
 		to, err := getDateFrom(req, "to")
 		if err != nil {
 			log.Println(err)
-			presenter.PresentError(domain.MalformedRequestErr)
+			renderer.RenderError(domain.MalformedRequestErr)
 			return
 		}
 		log.Println(from, to)
-		getReportsByDate.Exec(presenter, domain.ReportsByDatesRequest{
+		reports, err := getReportsByDate(domain.ReportsByDatesRequest{
 			From: from,
 			To:   to,
 		})
+		if err != nil {
+			renderer.RenderError(err)
+			return
+		}
+		renderer.Render(reports)
 	}
 }
 
@@ -61,11 +66,9 @@ func getDateFrom(req *http.Request, query string) (time.Time, error) {
 	return date, nil
 }
 
-func registerReportRoutes() {
-	phoenix.MapGroup("/routes", func(m phoenix.Mapper) {
-		m.MapAll([]phoenix.Mapping{
-			{Method: phoenix.Get, Builder: GetAllReports, Endpoint: "/"},
-			{Method: phoenix.Get, Builder: GetReportsBetweenDates, Endpoint: "/dates"},
-		})
+func registerReportRoutes(app phoenix.App) {
+	app.MapGroup("/routes", func(m phoenix.Mapper) {
+		m.Get("/", GetAllReports)
+		m.Get("/dates", GetReportsBetweenDates)
 	})
 }

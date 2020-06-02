@@ -8,28 +8,36 @@ import (
 	"github.com/deltegui/phoenix"
 )
 
-func GetAllSensors(getAllSensorsCase domain.GetAllSensorsCase) http.HandlerFunc {
+func GetAllSensors(getAllSensors domain.GetAllSensorsCase) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		presenter := NewJSONPresenter(w)
 		wantDeleted := req.URL.Query()["deleted"]
 		var reqCase domain.GetAllRequest
 		reqCase.WantDeleted = !(len(wantDeleted) < 1 || len(wantDeleted[0]) == 0 || wantDeleted[0] == "false")
-		getAllSensorsCase.Exec(presenter, reqCase)
+		sensors, err := getAllSensors(reqCase)
+		renderer := phoenix.NewJSONRenderer(w)
+		if err != nil {
+			renderer.RenderError(err)
+			return
+		}
+		renderer.Render(sensors)
 	}
 }
 
-func AllSensorNow(allSensorNowCase domain.AllSensorNowCase) http.HandlerFunc {
+func AllSensorNow(getSensorState domain.AllSensorNowCase) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		presenter := NewJSONPresenter(w)
-		allSensorNowCase.Exec(presenter, nil)
+		reports, err := getSensorState(nil)
+		renderer := phoenix.NewJSONRenderer(w)
+		if err != nil {
+			renderer.RenderError(err)
+			return
+		}
+		renderer.Render(reports)
 	}
 }
 
-func registerSensorsRoutes() {
-	phoenix.MapGroup("/sensors", func(m phoenix.Mapper) {
-		m.MapAll([]phoenix.Mapping{
-			{Method: phoenix.Get, Builder: GetAllSensors, Endpoint: ""},
-			{Method: phoenix.Get, Builder: AllSensorNow, Endpoint: "/all/now"},
-		})
+func registerSensorsRoutes(app phoenix.App) {
+	app.MapGroup("/sensors", func(m phoenix.Mapper) {
+		m.MapRoot(GetAllSensors)
+		m.Get("/all/now", AllSensorNow)
 	})
 }

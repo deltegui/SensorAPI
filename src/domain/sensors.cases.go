@@ -45,51 +45,50 @@ type GetAllRequest struct {
 	WantDeleted bool
 }
 
-type GetAllSensorsCase struct {
-	sensorRepo SensorRepo
-}
+type GetAllSensorsCase UseCase
 
 func NewGetAllSensorsCase(sensorRepo SensorRepo) GetAllSensorsCase {
-	return GetAllSensorsCase{sensorRepo}
+	return func(req UseCaseRequest) (UseCaseResponse, error) {
+		getAllReq := req.(GetAllRequest)
+		var sensors []Sensor
+		var err error
+		if getAllReq.WantDeleted {
+			sensors, err = sensorRepo.GetAll(WithDeletedSensors)
+		} else {
+			sensors, err = sensorRepo.GetAll(WithoutDeletedSensors)
+		}
+		if err != nil {
+			return nil, SensorNotFoundErr
+		}
+		viewModels := []SensorViewModel{}
+		for _, sensor := range sensors {
+			viewModels = append(viewModels, CreateViewModelFromSensor(sensor))
+		}
+		return viewModels, nil
+	}
 }
 
-func (useCase GetAllSensorsCase) Exec(presenter Presenter, req UseCaseRequest) {
-	getAllReq := req.(GetAllRequest)
-	var sensors []Sensor
-	var err error
-	if getAllReq.WantDeleted {
-		sensors, err = useCase.sensorRepo.GetAll(WithDeletedSensors)
-	} else {
-		sensors, err = useCase.sensorRepo.GetAll(WithoutDeletedSensors)
-	}
-	if err != nil {
-		presenter.PresentError(SensorNotFoundErr)
-		return
-	}
-	viewModels := []SensorViewModel{}
-	for _, sensor := range sensors {
-		viewModels = append(viewModels, CreateViewModelFromSensor(sensor))
-	}
-	presenter.Present(viewModels)
-}
-
-type SaveSensorCase struct {
-	sensorRepo     SensorRepo
-	reportTypeRepo ReportTypeRepo
-	validator      Validator
-	reporter       Reporter
-}
+type SaveSensorCase UseCase
 
 func NewSaveSensorCase(sensorRepo SensorRepo, validator Validator, reporter Reporter, reportTypeRepo ReportTypeRepo) SaveSensorCase {
-	return SaveSensorCase{
-		sensorRepo,
-		reportTypeRepo,
-		validator,
-		reporter,
+	return func(req UseCaseRequest) (UseCaseResponse, error) {
+		viewModel := req.(SensorViewModel)
+		if err := validator.Validate(viewModel); err != nil {
+			return nil, MalformedRequestErr
+		}
+		if !haveReportTypes(reportTypeRepo, viewModel.SupportedReports) {
+			return nil, ReportTypeDoesNotExists
+		}
+		if err := sensorRepo.Save(viewModel.ToSensor()); err != nil {
+			log.Println(err)
+			return nil, SensorAlreadyExist
+		}
+		reporter.Restart()
+		return viewModel, nil
 	}
 }
 
-func HaveReportTypes(reportTypeRepo ReportTypeRepo, reportTypes []ReportType) bool {
+func haveReportTypes(reportTypeRepo ReportTypeRepo, reportTypes []ReportType) bool {
 	foundRTypes := reportTypeRepo.GetAll()
 	for _, rType := range reportTypes {
 		found := false
@@ -106,161 +105,89 @@ func HaveReportTypes(reportTypeRepo ReportTypeRepo, reportTypes []ReportType) bo
 	return true
 }
 
-func (useCase SaveSensorCase) Exec(presenter Presenter, req UseCaseRequest) {
-	viewModel := req.(SensorViewModel)
-	if err := useCase.validator.Validate(viewModel); err != nil {
-		presenter.PresentError(MalformedRequestErr)
-		return
-	}
-	if !HaveReportTypes(useCase.reportTypeRepo, viewModel.SupportedReports) {
-		presenter.PresentError(ReportTypeDoesNotExists)
-		return
-	}
-	if err := useCase.sensorRepo.Save(viewModel.ToSensor()); err != nil {
-		log.Println(err)
-		presenter.PresentError(SensorAlreadyExist)
-		return
-	}
-	presenter.Present(viewModel)
-	useCase.reporter.Restart()
-}
-
-type DeleteSensorCase struct {
-	sensorRepo SensorRepo
-	validator  Validator
-	reporter   Reporter
-}
+type DeleteSensorCase UseCase
 
 func NewDeleteSensorCase(sensorRepo SensorRepo, validator Validator, reporter Reporter) DeleteSensorCase {
-	return DeleteSensorCase{
-		sensorRepo,
-		validator,
-		reporter,
+	return func(req UseCaseRequest) (UseCaseResponse, error) {
+		sensorName := req.(string)
+		sensor, err := sensorRepo.GetByName(sensorName)
+		if err != nil {
+			return nil, SensorNotFoundErr
+		}
+		sensor.Deleted = true
+		if sensorRepo.Update(sensor) {
+			return struct{ Deleted bool }{true}, nil
+		}
+		reporter.Restart()
+		return nil, InternalErr
 	}
 }
 
-func (useCase DeleteSensorCase) Exec(presenter Presenter, req UseCaseRequest) {
-	sensorName := req.(string)
-	sensor, err := useCase.sensorRepo.GetByName(sensorName)
-	if err != nil {
-		presenter.PresentError(SensorNotFoundErr)
-		return
-	}
-	sensor.Deleted = true
-	if useCase.sensorRepo.Update(sensor) {
-		presenter.Present(struct{ Deleted bool }{true})
-		return
-	}
-	presenter.PresentError(InternalErr)
-	useCase.reporter.Restart()
-}
-
-type UpdateSensorCase struct {
-	sensorRepo     SensorRepo
-	validator      Validator
-	reporter       Reporter
-	reportTypeRepo ReportTypeRepo
-}
+type UpdateSensorCase UseCase
 
 func NewUpdateSensorCase(sensorRepo SensorRepo, validator Validator, reporter Reporter, reportTypeRepo ReportTypeRepo) UpdateSensorCase {
-	return UpdateSensorCase{
-		sensorRepo,
-		validator,
-		reporter,
-		reportTypeRepo,
+	return func(req UseCaseRequest) (UseCaseResponse, error) {
+		viewModel := req.(SensorViewModel)
+		if err := validator.Validate(viewModel); err != nil {
+			log.Println(err)
+			return nil, MalformedRequestErr
+		}
+		if !haveReportTypes(reportTypeRepo, viewModel.SupportedReports) {
+			return nil, ReportTypeDoesNotExists
+		}
+		if !sensorRepo.Update(viewModel.ToSensor()) {
+			return nil, UpdateErr
+		}
+		reporter.Restart()
+		return viewModel, nil
 	}
 }
 
-func (useCase UpdateSensorCase) Exec(presenter Presenter, req UseCaseRequest) {
-	viewModel := req.(SensorViewModel)
-	if err := useCase.validator.Validate(viewModel); err != nil {
-		log.Println(err)
-		presenter.PresentError(MalformedRequestErr)
-		return
-	}
-	if !HaveReportTypes(useCase.reportTypeRepo, viewModel.SupportedReports) {
-		presenter.PresentError(ReportTypeDoesNotExists)
-		return
-	}
-	if !useCase.sensorRepo.Update(viewModel.ToSensor()) {
-		presenter.PresentError(UpdateErr)
-		return
-	}
-	presenter.Present(viewModel)
-	useCase.reporter.Restart()
-}
-
-type SensorNowCase struct {
-	sensorRepo SensorRepo
-	validator  Validator
-	reporter   Reporter
-}
+type SensorNowCase UseCase
 
 func NewSensorNowCase(sensorRepo SensorRepo, validator Validator, reporter Reporter) SensorNowCase {
-	return SensorNowCase{
-		sensorRepo,
-		validator,
-		reporter,
+	return func(req UseCaseRequest) (UseCaseResponse, error) {
+		sensorName := req.(string)
+		sensor, err := sensorRepo.GetByName(sensorName)
+		if err != nil {
+			return nil, SensorNotFoundErr
+		}
+		reports, err := sensor.GetCurrentState()
+		if err != nil {
+			return nil, err
+		}
+		return reports, nil
 	}
 }
 
-func (useCase SensorNowCase) Exec(presenter Presenter, req UseCaseRequest) {
-	sensorName := req.(string)
-	sensor, err := useCase.sensorRepo.GetByName(sensorName)
-	if err != nil {
-		presenter.PresentError(SensorNotFoundErr)
-		return
-	}
-	reports, err := sensor.GetCurrentState()
-	if err != nil {
-		presenter.PresentError(err)
-		return
-	}
-	presenter.Present(reports)
-}
-
-type AllSensorNowCase struct {
-	sensorRepo SensorRepo
-}
+type AllSensorNowCase UseCase
 
 func NewAllSensorNowCase(sensorRepo SensorRepo) AllSensorNowCase {
-	return AllSensorNowCase{
-		sensorRepo,
-	}
-}
-
-func (useCase AllSensorNowCase) Exec(presenter Presenter, req UseCaseRequest) {
-	sensors, err := useCase.sensorRepo.GetAll(WithoutDeletedSensors)
-	if err != nil {
-		presenter.PresentError(SensorNotFoundErr)
-		return
-	}
-	var reports []Report
-	for _, sensor := range sensors {
-		r, err := sensor.GetCurrentState()
-		if err == nil {
-			reports = append(reports, r...)
+	return func(req UseCaseRequest) (UseCaseResponse, error) {
+		sensors, err := sensorRepo.GetAll(WithoutDeletedSensors)
+		if err != nil {
+			return nil, SensorNotFoundErr
 		}
+		var reports []Report
+		for _, sensor := range sensors {
+			r, err := sensor.GetCurrentState()
+			if err == nil {
+				reports = append(reports, r...)
+			}
+		}
+		return reports, nil
 	}
-	presenter.Present(reports)
 }
 
-type GetSensorCase struct {
-	sensorRepo SensorRepo
-}
+type GetSensorCase UseCase
 
 func NewGetSensorCase(sensorRepo SensorRepo) GetSensorCase {
-	return GetSensorCase{
-		sensorRepo,
+	return func(req UseCaseRequest) (UseCaseResponse, error) {
+		sensorName := req.(string)
+		sensor, err := sensorRepo.GetByName(sensorName)
+		if err != nil {
+			return nil, SensorNotFoundErr
+		}
+		return CreateViewModelFromSensor(sensor), nil
 	}
-}
-
-func (useCase GetSensorCase) Exec(presenter Presenter, req UseCaseRequest) {
-	sensorName := req.(string)
-	sensor, err := useCase.sensorRepo.GetByName(sensorName)
-	if err != nil {
-		presenter.PresentError(SensorNotFoundErr)
-		return
-	}
-	presenter.Present(CreateViewModelFromSensor(sensor))
 }

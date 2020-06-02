@@ -9,7 +9,7 @@ type LoginUserRequest struct {
 	UserPassword string
 }
 
-type LoginUserCase func(req UseCaseRequest) (UseCaseResponse, error)
+type LoginUserCase UseCase
 
 func NewLoginUserCase(userRepo UserRepo) LoginUserCase {
 	return func(req UseCaseRequest) (UseCaseResponse, error) {

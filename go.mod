@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/deltegui/configloader v1.0.1
-	github.com/deltegui/phoenix v0.10.7
+	github.com/deltegui/phoenix v0.11.7
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gorilla/csrf v1.7.0

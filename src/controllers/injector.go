@@ -9,10 +9,9 @@ import (
 	"sensorapi/src/validator"
 
 	"github.com/deltegui/phoenix"
-	"github.com/deltegui/phoenix/injector"
 )
 
-func registerUseCases() {
+func registerUseCases(injector *phoenix.Injector) {
 	injector.Add(domain.NewGetAllSensorsCase)
 	injector.Add(domain.NewAllSensorNowCase)
 	injector.Add(domain.NewDeleteSensorCase)
@@ -24,7 +23,7 @@ func registerUseCases() {
 	injector.Add(domain.NewLoginUserCase)
 }
 
-func registerDependencies() {
+func registerDependencies(injector *phoenix.Injector) {
 	injector.Add(builders.NewHttpSensorBuilder)
 	injector.Add(validator.NewPlaygroundValidator)
 	injector.Add(persistence.NewSqlxReportTypeRepo)
@@ -35,17 +34,17 @@ func registerDependencies() {
 	injector.Add(cronscheluder.NewCronScheluder)
 }
 
-func Register(config configuration.Configuration) {
-	registerUseCases()
-	registerDependencies()
+func Register(app phoenix.App, config configuration.Configuration) {
+	registerUseCases(app.Injector)
+	registerDependencies(app.Injector)
 	conn := persistence.NewSqlxConnection(config)
-	injector.Add(func() *persistence.SqlxConnection { return &conn })
-	injector.Add(func() configuration.Configuration { return config })
+	app.Injector.Add(func() *persistence.SqlxConnection { return &conn })
+	app.Injector.Add(func() configuration.Configuration { return config })
 
-	phoenix.Map(phoenix.Mapping{Method: phoenix.Get, Builder: NotFound, Endpoint: "404"})
-	registerReportTypesRoutes()
-	registerSensorsRoutes()
-	registerSensorRoutes()
-	registerReportRoutes()
-	registerUserRoutes()
+	app.Map(phoenix.Mapping{Method: phoenix.Get, Builder: NotFound, Endpoint: "404"})
+	registerReportTypesRoutes(app)
+	registerSensorsRoutes(app)
+	registerSensorRoutes(app)
+	registerReportRoutes(app)
+	registerUserRoutes(app)
 }
