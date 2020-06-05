@@ -7,17 +7,18 @@ import (
 
 	"github.com/deltegui/phoenix"
 	"github.com/gorilla/csrf"
+	"github.com/gorilla/sessions"
 )
 
 func UserIndex() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		(phoenix.HTMLRenderer{w}).RenderData("userindex.html", map[string]interface{}{
+		phoenix.NewHTMLRenderer(w).RenderData("userindex.html", map[string]interface{}{
 			csrf.TemplateTag: csrf.TemplateField(req),
 		})
 	}
 }
 
-func ProcessUserLogin(execUserCase domain.LoginUserCase) http.HandlerFunc {
+func ProcessUserLogin(execUserCase domain.LoginUserCase, store sessions.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		req.ParseForm()
 		user := req.Form.Get("name")
@@ -31,6 +32,12 @@ func ProcessUserLogin(execUserCase domain.LoginUserCase) http.HandlerFunc {
 			http.Redirect(w, req, "/user/login", http.StatusSeeOther)
 			return
 		}
+		session, err := store.Get(req, "session")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		session.Values["username"] = user
+		session.Save(req, w)
 		http.Redirect(w, req, "/user/panel", http.StatusSeeOther)
 	}
 }

@@ -14,7 +14,8 @@ func main() {
 	app.Configure().
 		SetProjectInfo("sensorapi", "0.1.0").
 		EnableStaticServer().
-		EnableLogoFile()
+		EnableLogoFile().
+		EnableSessions()
 	config := configuration.Load()
 	controllers.Register(app, config)
 	app.Injector.ShowAvailableBuilders()

@@ -1,6 +1,8 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
 type Presenter interface {
 	Present(data interface{})
@@ -120,3 +122,8 @@ type UserRepo interface {
 	GetAll() []User
 	Save(user User)
 }
+
+/*type UserCache interface {
+	Get(name string) (*Session, error)
+	Save(s *Session) error
+}*/
