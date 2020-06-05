@@ -9,40 +9,39 @@ import (
 	"sensorapi/src/validator"
 
 	"github.com/deltegui/phoenix"
-	"github.com/deltegui/phoenix/injector"
 )
 
-func registerUseCases() {
-	injector.Add(domain.NewGetAllSensorsCase)
-	injector.Add(domain.NewAllSensorNowCase)
-	injector.Add(domain.NewDeleteSensorCase)
-	injector.Add(domain.NewGetSensorCase)
-	injector.Add(domain.NewSaveSensorCase)
-	injector.Add(domain.NewSensorNowCase)
-	injector.Add(domain.NewUpdateSensorCase)
-	injector.Add(domain.NewGetReportsByDates)
+func registerUseCases(app phoenix.App) {
+	app.Injector.Add(domain.NewGetAllSensorsCase)
+	app.Injector.Add(domain.NewAllSensorNowCase)
+	app.Injector.Add(domain.NewDeleteSensorCase)
+	app.Injector.Add(domain.NewGetSensorCase)
+	app.Injector.Add(domain.NewSaveSensorCase)
+	app.Injector.Add(domain.NewSensorNowCase)
+	app.Injector.Add(domain.NewUpdateSensorCase)
+	app.Injector.Add(domain.NewGetReportsByDates)
 }
 
-func registerDependencies() {
-	injector.Add(builders.NewHttpSensorBuilder)
-	injector.Add(validator.NewPlaygroundValidator)
-	injector.Add(persistence.NewSqlxReportTypeRepo)
-	injector.Add(persistence.NewSqlxSensorRepo)
-	injector.Add(persistence.NewSqlxReportRepo)
-	injector.Add(domain.NewReporter)
-	injector.Add(cronscheluder.NewCronScheluder)
+func registerDependencies(app phoenix.App) {
+	app.Injector.Add(builders.NewHttpSensorBuilder)
+	app.Injector.Add(validator.NewPlaygroundValidator)
+	app.Injector.Add(persistence.NewSqlxReportTypeRepo)
+	app.Injector.Add(persistence.NewSqlxSensorRepo)
+	app.Injector.Add(persistence.NewSqlxReportRepo)
+	app.Injector.Add(domain.NewReporter)
+	app.Injector.Add(cronscheluder.NewCronScheluder)
 }
 
-func Register(config configuration.Configuration) {
-	registerUseCases()
-	registerDependencies()
+func Register(app phoenix.App, config configuration.Configuration) {
+	registerUseCases(app)
+	registerDependencies(app)
 	conn := persistence.NewSqlxConnection(config)
-	injector.Add(func() *persistence.SqlxConnection { return &conn })
-	injector.Add(func() configuration.Configuration { return config })
+	app.Injector.Add(func() *persistence.SqlxConnection { return &conn })
+	app.Injector.Add(func() configuration.Configuration { return config })
 
-	phoenix.Map(phoenix.Mapping{Method: phoenix.Get, Builder: NotFound, Endpoint: "404"})
-	phoenix.MapController("/reporttypes", NewReportTypeController)
-	registerSensorsRoutes()
-	registerSensorRoutes()
-	registerReportRoutes()
+	app.Get("404", NotFound)
+	registerReportTypesRoutes(app)
+	registerSensorsRoutes(app)
+	registerSensorRoutes(app)
+	registerReportRoutes(app)
 }

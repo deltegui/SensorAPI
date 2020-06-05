@@ -7,18 +7,18 @@ import (
 	"sensorapi/src/domain"
 
 	"github.com/deltegui/phoenix"
-	"github.com/deltegui/phoenix/injector"
 )
 
 func main() {
-	phoenix.Configure().
+	app := phoenix.NewApp()
+	app.Configure().
 		SetProjectInfo("sensorapi", "0.1.0").
 		EnableLogoFile()
 	config := configuration.Load()
-	controllers.Register(config)
-	injector.ShowAvailableBuilders()
+	controllers.Register(app, config)
+	app.Injector.ShowAvailableBuilders()
 	reporterType := reflect.TypeOf((*domain.Reporter)(nil)).Elem()
-	reporter := injector.GetByType(reporterType).(domain.Reporter)
+	reporter := app.Injector.GetByType(reporterType).(domain.Reporter)
 	go reporter.Start()
-	phoenix.Run(config.ListenURL)
+	app.Run(config.ListenURL)
 }

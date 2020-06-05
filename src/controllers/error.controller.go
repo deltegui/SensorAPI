@@ -8,8 +8,7 @@ import (
 
 func NotFound() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		presenter := phoenix.JSONRenderer{w}
-		presenter.Render(struct {
+		phoenix.NewJSONPresenter(w).Present(struct {
 			Code string `json:"code"`
 		}{Code: "404"})
 	}
