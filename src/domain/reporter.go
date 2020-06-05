@@ -6,7 +6,7 @@ import (
 
 var globalReporter *Reporter
 
-func newScheluderJob(sensor Sensor, reportRepo ReportRepo, queue ReportQueue) ScheluderJob {
+func newScheluderJob(sensor Sensor, reportRepo ReportRepo) ScheluderJob {
 	return func() {
 		log.Printf("Running job for %s\n", sensor.Name)
 		currentReports, err := sensor.GetCurrentState()
@@ -16,29 +16,25 @@ func newScheluderJob(sensor Sensor, reportRepo ReportRepo, queue ReportQueue) Sc
 		}
 		for _, report := range currentReports {
 			reportRepo.Save(report)
-			queue.Publish(report)
 		}
 	}
 }
 
 type Reporter struct {
-	sensorRepo  SensorRepo
-	reportRepo  ReportRepo
-	scheluder   ReportScheluder
-	restart     chan bool
-	reportQueue ReportQueue
+	sensorRepo SensorRepo
+	reportRepo ReportRepo
+	scheluder  ReportScheluder
+	restart    chan bool
 }
 
-func NewReporter(sensorRepo SensorRepo, reportRepo ReportRepo, scheluder ReportScheluder, queue ReportQueue) Reporter {
+func NewReporter(sensorRepo SensorRepo, reportRepo ReportRepo, scheluder ReportScheluder) Reporter {
 	if globalReporter == nil {
 		log.Println("Created reporter")
-		queue.Connect()
 		globalReporter = &Reporter{
-			sensorRepo:  sensorRepo,
-			reportRepo:  reportRepo,
-			scheluder:   scheluder,
-			restart:     make(chan bool),
-			reportQueue: queue,
+			sensorRepo: sensorRepo,
+			reportRepo: reportRepo,
+			scheluder:  scheluder,
+			restart:    make(chan bool),
 		}
 	}
 	return *globalReporter
@@ -51,7 +47,7 @@ func (reporter Reporter) Start() {
 			return
 		}
 		for _, sensor := range sensors {
-			job := newScheluderJob(sensor, reporter.reportRepo, reporter.reportQueue)
+			job := newScheluderJob(sensor, reporter.reportRepo)
 			reporter.scheluder.AddJobEvery(job, sensor.UpdateInterval)
 		}
 		reporter.scheluder.Start()
